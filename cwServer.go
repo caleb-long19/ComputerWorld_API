@@ -1,9 +1,14 @@
 package main
 
 import (
+	"ComputerWorld_API/Controller"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+func main() {
+	apiServer()
+}
 
 func apiServer() {
 	e := echo.New()
@@ -25,10 +30,10 @@ func apiServer() {
 	*/
 
 	// Initialise Employee CRUD
-	employeeRoute.GET("/:id", getEmployee)
-	employeeRoute.POST("/", createEmployee)
-	employeeRoute.PUT("/:id", updateEmployee)
-	employeeRoute.DELETE("/:id", deleteEmployeeData)
+	employeeRoute.GET("/:id", Controller.GetEmployee)
+	employeeRoute.POST("/", Controller.CreateEmployee)
+	employeeRoute.PUT("/:id", Controller.UpdateEmployee)
+	employeeRoute.DELETE("/:id", Controller.DeleteEmployeeData)
 
 	// RUn server
 	e.Logger.Fatal(e.Start(":5000"))

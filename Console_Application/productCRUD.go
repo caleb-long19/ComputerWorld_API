@@ -1,29 +1,30 @@
-package main
+package Console_Application
 
 import (
+	"ComputerWorld_API/Model"
 	"fmt"
 	"strconv"
 	"time"
 )
 
 func createNewProduct() {
-	productData := productInformation{
-		productCode:  "",
-		productName:  "",
-		productPrice: 0.0,
+	productData := Model.ProductInformation{
+		ProductCode:  "",
+		ProductName:  "",
+		ProductPrice: 0.0,
 	}
 
 	clearData()
 	fmt.Println("Please Enter The Product Code: ")
-	pCode := scanUserInput(productData.productCode)
+	pCode := scanUserInput(productData.ProductCode)
 	fmt.Println("Product Code: ", pCode)
 
 	fmt.Println("Please Enter The Product Name: ")
-	pName := scanUserInput(productData.productName)
+	pName := scanUserInput(productData.ProductName)
 	fmt.Println("Product Name: ", pName)
 
 	fmt.Println("Please Enter The Product Price: ")
-	pPrice := scanUserInput(productData.productName)
+	pPrice := scanUserInput(productData.ProductName)
 	fmt.Println("Product Price: ", pPrice)
 	pPriceF, _ := strconv.ParseFloat(pPrice, 64)
 
@@ -34,7 +35,7 @@ func createNewProduct() {
 	assertRecordInputError()
 
 	//store results of create data
-	result := databaseCN.Create(&productRecords)
+	result := DatabaseCN.Create(&productRecords)
 
 	// Check errors and print results to console
 	if result.Error != nil {
@@ -51,7 +52,7 @@ func updateProductRecords() {
 
 	fmt.Println("Please enter the updated product name: ")
 	newProductValue = scanUserInput(newProductValue)
-	databaseCN.Model(&StoredProduct{}).Select("Name").Where("Name = ?", findProduct).Updates(map[string]interface{}{"Name": newProductValue})
+	DatabaseCN.Model(&Model.StoredProduct{}).Select("Name").Where("Name = ?", findProduct).Updates(map[string]interface{}{"Name": newProductValue})
 	fmt.Println("Product name has been changed!")
 
 	ProductInformationApplication()
@@ -62,7 +63,7 @@ func deleteProduct() {
 	fmt.Println("Deleting Product Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Product: ", selectRecord)
-	databaseCN.Where("Name = ?", selectRecord).Delete(&StoredProduct{})
+	DatabaseCN.Where("Name = ?", selectRecord).Delete(&Model.StoredProduct{})
 	ProductInformationApplication()
 }
 

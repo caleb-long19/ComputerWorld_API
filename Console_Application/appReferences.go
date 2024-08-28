@@ -1,6 +1,7 @@
-package main
+package Console_Application
 
 import (
+	Model2 "ComputerWorld_API/Model"
 	"bufio"
 	"os"
 )
@@ -16,8 +17,8 @@ var findProduct string
 var newProductValue string
 
 // Database
-var productRecords StoredProduct
-var employeeRecords EmployeeData
+var productRecords Model2.StoredProduct
+var employeeRecords Model2.EmployeeData
 
 func scanUserInput(scanInput string) string {
 	scanner := bufio.NewScanner(os.Stdin)

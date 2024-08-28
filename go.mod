@@ -1,4 +1,4 @@
-module ProjectGORM
+module ComputerWorld_API
 
 go 1.22
 

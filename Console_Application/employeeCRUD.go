@@ -1,30 +1,32 @@
-package main
+package Console_Application
 
+import "C"
 import (
+	"ComputerWorld_API/Model"
 	"fmt"
 	"time"
 )
 
 func createNewEmployee() {
-	employeeInfo := employeeData{
-		employeeName: "",
-		employeeRole: "",
+	employeeInfo := Model.EmployeeData{
+		EmployeeName: "",
+		EmployeeRole: "",
 	}
 
 	clearData()
 
 	fmt.Println("Please Enter The Employee's Name: ")
-	eName := scanUserInput(employeeInfo.employeeName)
+	eName := scanUserInput(employeeInfo.EmployeeName)
 	fmt.Println("Product Code: ", eName)
 
 	fmt.Println("Please Enter The Employee's Role: ")
-	eRole := scanUserInput(employeeInfo.employeeRole)
+	eRole := scanUserInput(employeeInfo.EmployeeRole)
 	fmt.Println("Product Name: ", eRole)
 
 	storeEmployeeDetails(eName, eRole)
 
 	//store results of employee
-	result := databaseCN.Create(&employeeRecords)
+	result := DatabaseCN.Create(&employeeRecords)
 
 	// Check errors and print results to console
 	if result.Error != nil {
@@ -41,7 +43,7 @@ func updateEmployeeRecords() {
 
 	fmt.Println("Please Enter The New Name: ")
 	newEmployeeValue = scanUserInput(newEmployeeValue)
-	databaseCN.Model(&EmployeeData{}).Select("employee_name").Where("employee_name = ?", findEmployee).Updates(map[string]interface{}{"employee_name": newEmployeeValue})
+	DatabaseCN.Model(&Model.EmployeeData{}).Select("employee_name").Where("employee_name = ?", findEmployee).Updates(map[string]interface{}{"employee_name": newEmployeeValue})
 	fmt.Println("Name has been changed!")
 
 	ProductInformationApplication()
@@ -52,7 +54,7 @@ func deleteEmployee() {
 	fmt.Println("Deleting Employee Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Employee Data: ", selectRecord)
-	databaseCN.Where("Employee_Name = ?", selectRecord).Delete(&EmployeeData{})
+	DatabaseCN.Where("Employee_Name = ?", selectRecord).Delete(&Model.EmployeeData{})
 	EmployeeInformationApplication()
 }
 
