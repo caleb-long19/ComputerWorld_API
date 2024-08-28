@@ -1,6 +1,7 @@
-package main
+package Console_Application
 
 import (
+	"ComputerWorld_API/CW_Database"
 	"fmt"
 	"gorm.io/gorm"
 	"log"
@@ -9,17 +10,15 @@ import (
 )
 
 // Database Connection
-var databaseCN = databaseConnection("Computer_world.db")
+var DatabaseCN = CW_Database.DatabaseConnection("CW_Database/Computer_world.db")
 
 var appType string
 var CheckRecordExists bool
 
 func main() {
-	// Restful API
-	apiServer()
 
 	// Console application
-	// cwIntroduction()
+	cwIntroduction()
 }
 
 func cwIntroduction() {
@@ -70,7 +69,7 @@ func cwIntroduction() {
 
 // Error Handling (Prevent duplicates and wrong inputs)
 func assertRecordInputError() {
-	err := databaseCN.Model(productRecords).
+	err := DatabaseCN.Model(productRecords).
 		Select("count(*) > 0").
 		Where("id = ? AND `Code` = ? AND `Name` = ?", productRecords.ID, productRecords.Code, productRecords.Name).
 		Find(&CheckRecordExists).Error

@@ -1,6 +1,8 @@
-package main
+package Controller
 
 import (
+	"ComputerWorld_API/Console_Application"
+	"ComputerWorld_API/Model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -118,8 +120,8 @@ func deleteProductData(c echo.Context) error {
 */
 
 // EmployeeData CRUD
-func createEmployee(c echo.Context) error {
-	employeeData := new(EmployeeData)
+func CreateEmployee(c echo.Context) error {
+	employeeData := new(Model.EmployeeData)
 
 	if err := c.Bind(employeeData); err != nil {
 		data := map[string]interface{}{
@@ -129,12 +131,12 @@ func createEmployee(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	newEmployee := &EmployeeData{
+	newEmployee := &Model.EmployeeData{
 		EmployeeName: employeeData.EmployeeName,
 		EmployeeRole: employeeData.EmployeeRole,
 	}
 
-	if err := databaseCN.Create(&newEmployee).Error; err != nil {
+	if err := Console_Application.DatabaseCN.Create(&newEmployee).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -149,11 +151,11 @@ func createEmployee(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response)
 }
 
-func getEmployee(c echo.Context) error {
+func GetEmployee(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var employees EmployeeData
+	var employee Model.EmployeeData
 
 	// PACKAGE YOUR FILES TO USE THEM FOR TESTING
 	// CREATE MORE TESTS
@@ -161,21 +163,21 @@ func getEmployee(c echo.Context) error {
 	// PREVENT SQL INJECTION USING WHERE
 	// UPLOAD PROJECT TO GITHUB
 
-	if res := databaseCN.Debug().Where("Employee_ID = ?", id).First(&employees); res.Error != nil {
+	if res := Console_Application.DatabaseCN.Where("employee_id = ?", id).First(&employee); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
 	response := map[string]interface{}{
-		"employee_data": employees,
+		"employee_data": employee,
 	}
 
 	return c.JSON(http.StatusOK, response)
 }
 
-func updateEmployee(c echo.Context) error {
+func UpdateEmployee(c echo.Context) error {
 
 	id := c.Param("id")
-	employeeData := new(EmployeeData)
+	employeeData := new(Model.EmployeeData)
 
 	if err := c.Bind(employeeData); err != nil {
 		data := map[string]interface{}{
@@ -185,9 +187,9 @@ func updateEmployee(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingEmployee := new(EmployeeData)
+	existingEmployee := new(Model.EmployeeData)
 
-	if err := databaseCN.First(&existingEmployee, id).Error; err != nil {
+	if err := Console_Application.DatabaseCN.Where("employee_id = ?", id).First(&existingEmployee).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -197,7 +199,7 @@ func updateEmployee(c echo.Context) error {
 	existingEmployee.EmployeeName = employeeData.EmployeeName
 	existingEmployee.EmployeeRole = employeeData.EmployeeRole
 
-	if err := databaseCN.Save(&existingEmployee).Error; err != nil {
+	if err := Console_Application.DatabaseCN.Save(&existingEmployee).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -211,12 +213,12 @@ func updateEmployee(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func deleteEmployeeData(c echo.Context) error {
+func DeleteEmployeeData(c echo.Context) error {
 	id := c.Param("id")
 
-	delEmployee := new(EmployeeData)
+	delEmployee := new(Model.EmployeeData)
 
-	err := databaseCN.Delete(&delEmployee, id).Error
+	err := Console_Application.DatabaseCN.Where("employee_id = ?", id).Delete(&delEmployee).Error
 	if err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),

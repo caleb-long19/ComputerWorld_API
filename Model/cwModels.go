@@ -1,4 +1,4 @@
-package main
+package Model
 
 // StoredProduct Model
 type StoredProduct struct {
@@ -8,11 +8,11 @@ type StoredProduct struct {
 	Price float64 `gorm:"not null" json:"Price"`
 }
 
-type productInformation struct {
+type ProductInformation struct {
 	// Variables that will store user input product data
-	productCode  string
-	productName  string
-	productPrice float64
+	ProductCode  string
+	ProductName  string
+	ProductPrice float64
 }
 
 // EmployeeData Model
@@ -23,7 +23,7 @@ type EmployeeData struct {
 	EmployeeRole string `json:"Employee_Role"`
 }
 
-type employeeData struct {
-	employeeName string
-	employeeRole string
+type EmployeeInformation struct {
+	EmployeeName string
+	EmployeeRole string
 }
