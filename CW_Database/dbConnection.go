@@ -6,6 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Database Connection
+var DatabaseCN = DatabaseConnection("CW_Database/Computer_world.db")
+
 // DatabaseConnection Opens the database connection
 func DatabaseConnection(databaseName string) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(databaseName), &gorm.Config{})
@@ -17,9 +20,9 @@ func DatabaseConnection(databaseName string) *gorm.DB {
 	// Migrate the schema
 	db.AutoMigrate(&Model.Manufacturer{})
 
-	db.AutoMigrate(&Model.Products{})
+	db.AutoMigrate(&Model.Product{})
 
-	db.AutoMigrate(&Model.ProductStock{})
+	db.AutoMigrate(&Model.Order{})
 
 	return db
 }

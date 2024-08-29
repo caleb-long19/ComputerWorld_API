@@ -17,7 +17,7 @@ var findProduct string
 var newProduct string
 
 // Database
-var productRecords Model2.Products
+var productRecords Model2.Product
 var manufacturerRecords Model2.Manufacturer
 
 func scanUserInput(scanInput string) string {

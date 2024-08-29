@@ -7,10 +7,10 @@ import (
 	"net/http"
 )
 
-func CreateStock(c echo.Context) error {
-	stockData := new(Model.ProductStock)
+func CreateOrder(c echo.Context) error {
+	orderData := new(Model.Order)
 
-	if err := c.Bind(stockData); err != nil {
+	if err := c.Bind(orderData); err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -18,11 +18,12 @@ func CreateStock(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	newStock := &Model.ProductStock{
-		Stock: stockData.Stock,
+	newOrder := &Model.Order{
+		ProductID:   orderData.ProductID,
+		OrderAmount: orderData.OrderAmount,
 	}
 
-	if err := Console_Application.DatabaseCN.Create(&newStock).Error; err != nil {
+	if err := databaseCN.Create(&newOrder).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -31,35 +32,35 @@ func CreateStock(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"Manufacturer_Dara": newStock,
+		"Order_Data": newOrder,
 	}
 
 	return c.JSON(http.StatusCreated, response)
 }
 
-func GetStock(c echo.Context) error {
+func GetOrder(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var stock Model.ProductStock
+	var order Model.Order
 
-	if res := Console_Application.DatabaseCN.Where("stock_id = ?", id).First(&stock); res.Error != nil {
+	if res := databaseCN.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
 	response := map[string]interface{}{
-		"Stock_Data": stock,
+		"Order_Data": order,
 	}
 
 	return c.JSON(http.StatusOK, response)
 }
 
-func PutStock(c echo.Context) error {
+func PutOrder(c echo.Context) error {
 
 	id := c.Param("id")
-	stock := new(Model.ProductStock)
+	order := new(Model.Order)
 
-	if err := c.Bind(stock); err != nil {
+	if err := c.Bind(order); err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -67,18 +68,18 @@ func PutStock(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingStock := new(Model.ProductStock)
+	existingOrder := new(Model.Order)
 
-	if err := Console_Application.DatabaseCN.Where("stock_id = ?", id).First(&existingStock).Error; err != nil {
+	if err := databaseCN.Where("order_id = ?", id).First(&order).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingStock.Stock = stock.Stock
+	existingOrder.OrderAmount = order.OrderAmount
 
-	if err := Console_Application.DatabaseCN.Save(&existingStock).Error; err != nil {
+	if err := Console_Application.DatabaseCN.Save(&existingOrder).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -86,18 +87,18 @@ func PutStock(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"Stock_Data": existingStock,
+		"Order_Data": existingOrder,
 	}
 
 	return c.JSON(http.StatusOK, response)
 }
 
-func DeleteStock(c echo.Context) error {
+func DeleteOrder(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteStock := new(Model.ProductStock)
+	deleteOrder := new(Model.Order)
 
-	err := Console_Application.DatabaseCN.Where("stock_id = ?", id).Delete(&deleteStock).Error
+	err := databaseCN.Where("order_id = ?", id).Delete(&deleteOrder).Error
 	if err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
@@ -107,7 +108,7 @@ func DeleteStock(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"message": "Stock has been deleted",
+		"message": "Order has been deleted",
 	}
 
 	return c.JSON(http.StatusOK, response)

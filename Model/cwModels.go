@@ -1,12 +1,30 @@
 package Model
 
-type Products struct {
-	ProductID      uint         `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code           string       `gorm:"unique" json:"code"`
-	Name           string       `gorm:"unique" json:"name"`
-	ManufacturerID int          `gorm:"foreignKey:ManufacturerID,constraint:OnUpdate:CASCADE,OnDelete:Set Null" json:"manufacturer_id"`
-	Manufacturer   Manufacturer `json:"manufacturer"`
-	Price          float64      `gorm:"not null" json:"price"`
+type Product struct {
+	ProductID        int          `gorm:"primaryKey;autoIncrement" json:"id"`
+	ProductCode      string       `gorm:"unique" json:"code"`
+	ProductName      string       `gorm:"unique" json:"name"`
+	ManufacturerID   int          `gorm:"foreignKey:ManufacturerID, constraint:OnUpdate:CASCADE,OnDelete:Set Null" json:"manufacturer_id"`
+	ManufacturerName string       `gorm:"references:ManufacturerName"`
+	Manufacturer     Manufacturer `json:"manufacturer"`
+	Stock            int          `json:"stock"`
+	Price            float64      `gorm:"not null" json:"price"`
+}
+
+type Manufacturer struct {
+	// Variables that will store user input product data
+	ManufacturerID   int    `gorm:"primaryKey;autoIncrement" json:"manufacturer_id"`
+	ManufacturerName string `json:"manufacturer_name"`
+}
+
+type Order struct {
+	OrderID     int     `gorm:"primaryKey;autoIncrement" json:"id"`
+	OrderRef    string  `gorm:"unique;autoIncrement" json:"code"`
+	ProductID   int     `gorm:"foreignKey:ProductID, constraint:OnUpdate:CASCADE,OnDelete:Set Null" json:"product_id"`
+	ProductName string  `gorm:"references:ProductName"`
+	Product     Product `json:"product"`
+	OrderAmount int     `json:"order_amount"`
+	OrderCost   float64 `json:"order_cost"`
 }
 
 type ProductInformation struct {
@@ -18,20 +36,9 @@ type ProductInformation struct {
 	ProductPrice   float64
 }
 
-type ProductStock struct {
-	StockID   uint64 `gorm:"primaryKey;autoIncrement" json:"stock_id"`
-	ProductID int    `json:"product_id"`
-	Product   Products
-	Stock     uint64 `json:"stock"`
-}
-
-type Manufacturer struct {
-	// Variables that will store user input product data
-	ManufacturerID   uint   `gorm:"primaryKey;autoIncrement" json:"manufacturer_id"`
-	ManufacturerName string `json:"manufacturer_name"`
-}
-
+/*
 type ManufacturerInformation struct {
 	ManufacturerID   string
 	ManufacturerName string
 }
+*/

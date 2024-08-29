@@ -5,7 +5,7 @@ import (
 )
 
 func storeProductDetails(code, name string, price float64) {
-	productRecords = Model.Products{Code: code, Name: name, Price: price}
+	productRecords = Model.Product{ProductCode: code, ProductName: name, Price: price}
 }
 
 func storeManufacturer(name string) {
