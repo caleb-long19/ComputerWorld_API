@@ -39,7 +39,7 @@ func cwIntroduction() {
 	case "Employee Details":
 		fmt.Println("Loading 'Employee Details': Please wait...")
 		time.Sleep(2 * time.Second)
-		EmployeeInformationApplication()
+		ManufacturerInformationApplication()
 	case "Close Application":
 		fmt.Println("Closing Application...")
 		time.Sleep(2 * time.Second)
@@ -71,7 +71,7 @@ func cwIntroduction() {
 func assertRecordInputError() {
 	err := DatabaseCN.Model(productRecords).
 		Select("count(*) > 0").
-		Where("id = ? AND `Code` = ? AND `Name` = ?", productRecords.ID, productRecords.Code, productRecords.Name).
+		Where("id = ? AND `Code` = ? AND `Name` = ?", productRecords.ProductID, productRecords.Code, productRecords.Name).
 		Find(&CheckRecordExists).Error
 
 	if err != nil {
@@ -87,6 +87,6 @@ func assertRecordInputError() {
 func clearData() {
 	appType = ""
 	choosePage = ""
-	newEmployeeValue = ""
-	findEmployee = ""
+	newManufacturer = ""
+	findManufacturer = ""
 }

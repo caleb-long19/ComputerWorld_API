@@ -51,8 +51,8 @@ func updateProductRecords() {
 	findProduct = scanUserInput(findProduct)
 
 	fmt.Println("Please enter the updated product name: ")
-	newProductValue = scanUserInput(newProductValue)
-	DatabaseCN.Model(&Model.StoredProduct{}).Select("Name").Where("Name = ?", findProduct).Updates(map[string]interface{}{"Name": newProductValue})
+	newProduct = scanUserInput(newProduct)
+	DatabaseCN.Model(&Model.Products{}).Select("Name").Where("Name = ?", findProduct).Updates(map[string]interface{}{"Name": newProduct})
 	fmt.Println("Product name has been changed!")
 
 	ProductInformationApplication()
@@ -63,7 +63,7 @@ func deleteProduct() {
 	fmt.Println("Deleting Product Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Product: ", selectRecord)
-	DatabaseCN.Where("Name = ?", selectRecord).Delete(&Model.StoredProduct{})
+	DatabaseCN.Where("Name = ?", selectRecord).Delete(&Model.Products{})
 	ProductInformationApplication()
 }
 

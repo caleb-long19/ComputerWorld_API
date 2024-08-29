@@ -1,29 +1,37 @@
 package Model
 
-// StoredProduct Model
-type StoredProduct struct {
-	ID    uint    `gorm:"primaryKey;autoIncrement" json:"ID"`
-	Code  string  `gorm:"unique" json:"Code"`
-	Name  string  `gorm:"unique" json:"Name"`
-	Price float64 `gorm:"not null" json:"Price"`
+type Products struct {
+	ProductID      uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code           string         `gorm:"unique" json:"code"`
+	Name           string         `gorm:"unique" json:"name"`
+	ManufacturerID int            `json:"manufacturer_id"`
+	Manufacturer   []Manufacturer `json:"manufacturer"`
+	Price          float64        `gorm:"not null" json:"price"`
 }
 
 type ProductInformation struct {
 	// Variables that will store user input product data
-	ProductCode  string
-	ProductName  string
-	ProductPrice float64
+	ProductCode    string
+	ProductName    string
+	ManufacturerID int
+	Manufacturer   string
+	ProductPrice   float64
 }
 
-// EmployeeData Model
-type EmployeeData struct {
+type ProductStock struct {
+	StockID   uint64 `gorm:"primaryKey;autoIncrement" json:"stock_id"`
+	ProductID int    `json:"product_id"`
+	Product   []Products
+	Stock     uint64 `json:"stock"`
+}
+
+type Manufacturer struct {
 	// Variables that will store user input product data
-	EmployeeID   uint   `gorm:"primaryKey;autoIncrement" json:"Employee_ID"`
-	EmployeeName string `json:"Employee_Name"`
-	EmployeeRole string `json:"Employee_Role"`
+	ManufacturerID   uint   `gorm:"primaryKey;autoIncrement" json:"manufacturer_id"`
+	ManufacturerName string `json:"manufacturer_name"`
 }
 
-type EmployeeInformation struct {
-	EmployeeName string
-	EmployeeRole string
+type ManufacturerInformation struct {
+	ManufacturerID   string
+	ManufacturerName string
 }
