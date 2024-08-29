@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-// Manufacturer CRUD
 func CreateManufacturer(c echo.Context) error {
 	manufacturerData := new(Model.Manufacturer)
 
@@ -32,7 +31,7 @@ func CreateManufacturer(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"Employee_Data": newManufacturer,
+		"Manufacturer_Dara": newManufacturer,
 	}
 
 	return c.JSON(http.StatusCreated, response)
@@ -49,7 +48,7 @@ func GetManufacturer(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"employee_data": manufacturer,
+		"Manufacturer_Data": manufacturer,
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -87,7 +86,7 @@ func PutManufacturer(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"employee_data": existingManufacturer,
+		"Manufacturer_Data": existingManufacturer,
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -108,7 +107,7 @@ func DeleteManufacturer(c echo.Context) error {
 	}
 
 	response := map[string]interface{}{
-		"message": "Employee has been deleted",
+		"message": "Product has been deleted",
 	}
 
 	return c.JSON(http.StatusOK, response)

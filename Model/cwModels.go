@@ -1,12 +1,12 @@
 package Model
 
 type Products struct {
-	ProductID      uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	Code           string         `gorm:"unique" json:"code"`
-	Name           string         `gorm:"unique" json:"name"`
-	ManufacturerID int            `json:"manufacturer_id"`
-	Manufacturer   []Manufacturer `json:"manufacturer"`
-	Price          float64        `gorm:"not null" json:"price"`
+	ProductID      uint         `gorm:"primaryKey;autoIncrement" json:"id"`
+	Code           string       `gorm:"unique" json:"code"`
+	Name           string       `gorm:"unique" json:"name"`
+	ManufacturerID int          `gorm:"foreignKey:ManufacturerID,constraint:OnUpdate:CASCADE,OnDelete:Set Null" json:"manufacturer_id"`
+	Manufacturer   Manufacturer `json:"manufacturer"`
+	Price          float64      `gorm:"not null" json:"price"`
 }
 
 type ProductInformation struct {
@@ -21,7 +21,7 @@ type ProductInformation struct {
 type ProductStock struct {
 	StockID   uint64 `gorm:"primaryKey;autoIncrement" json:"stock_id"`
 	ProductID int    `json:"product_id"`
-	Product   []Products
+	Product   Products
 	Stock     uint64 `json:"stock"`
 }
 
