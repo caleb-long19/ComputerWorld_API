@@ -27,6 +27,7 @@ type Order struct {
 	OrderCost   float64 `json:"order_cost"`
 }
 
+// Ignore this for now
 type ProductInformation struct {
 	// Variables that will store user input product data
 	ProductCode    string
