@@ -5,9 +5,9 @@ import (
 )
 
 func storeProductDetails(code, name string, price float64) {
-	productRecords = Model.StoredProduct{Code: code, Name: name, Price: price}
+	productRecords = Model.Products{Code: code, Name: name, Price: price}
 }
 
-func storeEmployeeDetails(name, role string) {
-	employeeRecords = Model.EmployeeData{EmployeeName: name, EmployeeRole: role}
+func storeManufacturer(name string) {
+	manufacturerRecords = Model.Manufacturer{ManufacturerName: name}
 }

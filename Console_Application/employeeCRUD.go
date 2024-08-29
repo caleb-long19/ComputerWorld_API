@@ -7,77 +7,72 @@ import (
 	"time"
 )
 
-func createNewEmployee() {
-	employeeInfo := Model.EmployeeData{
-		EmployeeName: "",
-		EmployeeRole: "",
+func createNewManufacturer() {
+	manufacturerInfo := Model.Manufacturer{
+		ManufacturerName: "",
 	}
 
 	clearData()
 
 	fmt.Println("Please Enter The Employee's Name: ")
-	eName := scanUserInput(employeeInfo.EmployeeName)
-	fmt.Println("Product Code: ", eName)
+	mName := scanUserInput(manufacturerInfo.ManufacturerName)
+	fmt.Println("Product Code: ", mName)
 
-	fmt.Println("Please Enter The Employee's Role: ")
-	eRole := scanUserInput(employeeInfo.EmployeeRole)
-	fmt.Println("Product Name: ", eRole)
-
-	storeEmployeeDetails(eName, eRole)
+	storeManufacturer(mName)
 
 	//store results of employee
-	result := DatabaseCN.Create(&employeeRecords)
+	result := DatabaseCN.Create(&manufacturerRecords)
 
 	// Check errors and print results to console
 	if result.Error != nil {
 		panic(result.Error.Error())
 	}
 
-	EmployeeInformationApplication()
+	ManufacturerInformationApplication()
 }
 
-func updateEmployeeRecords() {
+func updateManufacturerRecords() {
 	clearData()
 	fmt.Println("Please Enter The Name of the Employee you wish to change: ")
-	findEmployee = scanUserInput(findEmployee)
+	findManufacturer = scanUserInput(findManufacturer)
 
 	fmt.Println("Please Enter The New Name: ")
-	newEmployeeValue = scanUserInput(newEmployeeValue)
-	DatabaseCN.Model(&Model.EmployeeData{}).Select("employee_name").Where("employee_name = ?", findEmployee).Updates(map[string]interface{}{"employee_name": newEmployeeValue})
+	newManufacturer = scanUserInput(newManufacturer)
+	DatabaseCN.Model(&Model.Manufacturer{}).Select("manufacturer_name").Where("manufacturer_name = ?", findManufacturer).Updates(map[string]interface{}{"manufacturer_name": newManufacturer})
 	fmt.Println("Name has been changed!")
 
 	ProductInformationApplication()
 }
 
-func deleteEmployee() {
+func deleteManufacturer() {
 	selectRecord = ""
-	fmt.Println("Deleting Employee Records:")
+	fmt.Println("Deleting Manufacturer Records:")
 	selectRecord = scanUserInput(selectRecord)
-	fmt.Println("Deleting Employee Data: ", selectRecord)
-	DatabaseCN.Where("Employee_Name = ?", selectRecord).Delete(&Model.EmployeeData{})
-	EmployeeInformationApplication()
+	fmt.Println("Deleting Manufacturer Data: ", selectRecord)
+	DatabaseCN.Where("manufacturer_name = ?", selectRecord).Delete(&Model.Manufacturer{})
+	ManufacturerInformationApplication()
 }
 
-func EmployeeInformationApplication() {
+func ManufacturerInformationApplication() {
 	clearData()
-	fmt.Println("Welcome to the Employee Information Page: What would you like to do?")
-	fmt.Println("Add Employee, Update Employee, Delete Employee, Exit")
+	fmt.Println("Welcome to the Manufacturer Information Page: What would you like to do?")
+	fmt.Println("Add Manufacturer, Update Manufacturer, Delete Manufacturer, Exit")
 	choosePage = scanUserInput(choosePage)
 
 	fmt.Println("You Chose:", choosePage)
 
-	if choosePage == "Add Employee" {
-		fmt.Println("Loading 'Add Employee': Please wait...")
+	if choosePage == "Add Manufacturer" {
+		fmt.Println("Loading 'Add Manufacturer': Please wait...")
 		time.Sleep(1 * time.Second)
-		createNewEmployee()
-	} else if choosePage == "Update Employee" {
-		fmt.Println("Loading 'Update Employee': Please wait...")
+		createNewManufacturer()
+	} else if choosePage == "Update Manufacturer" {
+		fmt.Println("Loading 'Update Manufacturer': Please wait...")
 		time.Sleep(1 * time.Second)
-		updateEmployeeRecords()
-	} else if choosePage == "Delete Employee" {
-		fmt.Println("Loading 'Delete Employee': Please wait...")
+		updateManufacturerRecords()
+	} else if choosePage == "Delete Manufacturer" {
+		fmt.Println("Loading 'Delete Manufacturer': Please wait...")
 		time.Sleep(1 * time.Second)
-		deleteEmployee()
+		deleteManufacturer()
 	} else if choosePage == "Exit" {
 		fmt.Println("Returning to Home Page: Please wait...")
 		time.Sleep(1 * time.Second)
