@@ -15,7 +15,7 @@ func apiServer() {
 
 	manufacturerRoute := e.Group("/manufacturer")
 	productRoute := e.Group("/product")
-	// stockRoute := e.Group("/stock")
+	orderRoute := e.Group("/order")
 
 	// Prints to default page
 	e.GET("/", func(c echo.Context) error {
@@ -34,13 +34,11 @@ func apiServer() {
 	productRoute.PUT("/:id", Controller.PutProduct)
 	productRoute.DELETE("/:id", Controller.DeleteProduct)
 
-	/*
-		// Initialise Stock CRUD
-		stockRoute.GET("/:id", Controller.GetStock)
-		stockRoute.POST("/", Controller.CreateStock)
-		stockRoute.PUT("/:id", Controller.PutStock)
-		stockRoute.DELETE("/:id", Controller.DeleteStock)
-	*/
+	// Initialise Stock CRUD
+	orderRoute.GET("/:id", Controller.GetOrder)
+	orderRoute.POST("/", Controller.CreateOrder)
+	orderRoute.PUT("/:id", Controller.PutOrder)
+	orderRoute.DELETE("/:id", Controller.DeleteOrder)
 
 	// RUn server
 	e.Logger.Fatal(e.Start(":5000"))

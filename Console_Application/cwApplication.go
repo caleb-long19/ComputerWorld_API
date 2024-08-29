@@ -71,7 +71,7 @@ func cwIntroduction() {
 func assertRecordInputError() {
 	err := DatabaseCN.Model(productRecords).
 		Select("count(*) > 0").
-		Where("id = ? AND `Code` = ? AND `Name` = ?", productRecords.ProductID, productRecords.Code, productRecords.Name).
+		Where("id = ? AND `ProductCode` = ? AND `ProductName` = ?", productRecords.ProductID, productRecords.ProductCode, productRecords.ProductName).
 		Find(&CheckRecordExists).Error
 
 	if err != nil {

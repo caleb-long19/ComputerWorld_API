@@ -14,9 +14,9 @@ func createNewManufacturer() {
 
 	clearData()
 
-	fmt.Println("Please Enter The Employee's Name: ")
+	fmt.Println("Please Enter The Employee's ProductName: ")
 	mName := scanUserInput(manufacturerInfo.ManufacturerName)
-	fmt.Println("Product Code: ", mName)
+	fmt.Println("Product ProductCode: ", mName)
 
 	storeManufacturer(mName)
 
@@ -33,13 +33,13 @@ func createNewManufacturer() {
 
 func updateManufacturerRecords() {
 	clearData()
-	fmt.Println("Please Enter The Name of the Employee you wish to change: ")
+	fmt.Println("Please Enter The ProductName of the Employee you wish to change: ")
 	findManufacturer = scanUserInput(findManufacturer)
 
-	fmt.Println("Please Enter The New Name: ")
+	fmt.Println("Please Enter The New ProductName: ")
 	newManufacturer = scanUserInput(newManufacturer)
 	DatabaseCN.Model(&Model.Manufacturer{}).Select("manufacturer_name").Where("manufacturer_name = ?", findManufacturer).Updates(map[string]interface{}{"manufacturer_name": newManufacturer})
-	fmt.Println("Name has been changed!")
+	fmt.Println("ProductName has been changed!")
 
 	ProductInformationApplication()
 }

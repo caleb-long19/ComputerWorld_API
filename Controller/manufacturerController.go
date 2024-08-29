@@ -1,7 +1,6 @@
 package Controller
 
 import (
-	"ComputerWorld_API/Console_Application"
 	"ComputerWorld_API/Model"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,7 +21,7 @@ func CreateManufacturer(c echo.Context) error {
 		ManufacturerName: manufacturerData.ManufacturerName,
 	}
 
-	if err := Console_Application.DatabaseCN.Create(&newManufacturer).Error; err != nil {
+	if err := databaseCN.Create(&newManufacturer).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -43,7 +42,7 @@ func GetManufacturer(c echo.Context) error {
 
 	var manufacturer Model.Manufacturer
 
-	if res := Console_Application.DatabaseCN.Where("manufacturer_id = ?", id).First(&manufacturer); res.Error != nil {
+	if res := databaseCN.Where("manufacturer_id = ?", id).First(&manufacturer); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
@@ -69,7 +68,7 @@ func PutManufacturer(c echo.Context) error {
 
 	existingManufacturer := new(Model.Manufacturer)
 
-	if err := Console_Application.DatabaseCN.Where("manufacturer_id = ?", id).First(&existingManufacturer).Error; err != nil {
+	if err := databaseCN.Where("manufacturer_id = ?", id).First(&existingManufacturer).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -78,7 +77,7 @@ func PutManufacturer(c echo.Context) error {
 
 	existingManufacturer.ManufacturerName = manufacturer.ManufacturerName
 
-	if err := Console_Application.DatabaseCN.Save(&existingManufacturer).Error; err != nil {
+	if err := databaseCN.Save(&existingManufacturer).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -97,7 +96,7 @@ func DeleteManufacturer(c echo.Context) error {
 
 	deleteManufacturer := new(Model.Manufacturer)
 
-	err := Console_Application.DatabaseCN.Where("manufacturer_id = ?", id).Delete(&deleteManufacturer).Error
+	err := databaseCN.Where("manufacturer_id = ?", id).Delete(&deleteManufacturer).Error
 	if err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),

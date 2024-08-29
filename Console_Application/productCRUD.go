@@ -15,13 +15,13 @@ func createNewProduct() {
 	}
 
 	clearData()
-	fmt.Println("Please Enter The Product Code: ")
+	fmt.Println("Please Enter The Product ProductCode: ")
 	pCode := scanUserInput(productData.ProductCode)
-	fmt.Println("Product Code: ", pCode)
+	fmt.Println("Product ProductCode: ", pCode)
 
-	fmt.Println("Please Enter The Product Name: ")
+	fmt.Println("Please Enter The Product ProductName: ")
 	pName := scanUserInput(productData.ProductName)
-	fmt.Println("Product Name: ", pName)
+	fmt.Println("Product ProductName: ", pName)
 
 	fmt.Println("Please Enter The Product Price: ")
 	pPrice := scanUserInput(productData.ProductName)
@@ -52,7 +52,7 @@ func updateProductRecords() {
 
 	fmt.Println("Please enter the updated product name: ")
 	newProduct = scanUserInput(newProduct)
-	DatabaseCN.Model(&Model.Products{}).Select("Name").Where("Name = ?", findProduct).Updates(map[string]interface{}{"Name": newProduct})
+	DatabaseCN.Model(&Model.Product{}).Select("ProductName").Where("ProductName = ?", findProduct).Updates(map[string]interface{}{"ProductName": newProduct})
 	fmt.Println("Product name has been changed!")
 
 	ProductInformationApplication()
@@ -63,7 +63,7 @@ func deleteProduct() {
 	fmt.Println("Deleting Product Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Product: ", selectRecord)
-	DatabaseCN.Where("Name = ?", selectRecord).Delete(&Model.Products{})
+	DatabaseCN.Where("ProductName = ?", selectRecord).Delete(&Model.Product{})
 	ProductInformationApplication()
 }
 
