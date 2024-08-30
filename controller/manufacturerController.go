@@ -3,6 +3,7 @@ package controller
 import (
 	"ComputerWorld_API/model"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -41,6 +42,8 @@ func GetManufacturer(c echo.Context) error {
 	id := c.Param("id")
 
 	var manufacturer model.Manufacturer
+
+	databaseCN.Preload("Product").Preload("Manufacturer").Find(&manufacturer)
 
 	if res := databaseCN.Where("manufacturer_id = ?", id).First(&manufacturer); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
@@ -110,4 +113,10 @@ func DeleteManufacturer(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+func GetAll(db *gorm.DB) (model.Product, error) {
+	var products model.Product
+	err := db.Model(&model.Product{}).Preload("ManufacturerID").Find(&products).Error
+	return products, err
 }
