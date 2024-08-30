@@ -1,13 +1,13 @@
-package CW_Database
+package database
 
 import (
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 // Database Connection
-var DatabaseCN = DatabaseConnection("CW_Database/Computer_world.db")
+var DatabaseCN = DatabaseConnection("database/computer_world.db")
 
 // DatabaseConnection Opens the database connection
 func DatabaseConnection(databaseName string) *gorm.DB {
@@ -18,11 +18,11 @@ func DatabaseConnection(databaseName string) *gorm.DB {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Model.Manufacturer{})
+	db.AutoMigrate(&model.Manufacturer{})
 
-	db.AutoMigrate(&Model.Product{})
+	db.AutoMigrate(&model.Product{})
 
-	db.AutoMigrate(&Model.Order{})
+	db.AutoMigrate(&model.Order{})
 
 	return db
 }

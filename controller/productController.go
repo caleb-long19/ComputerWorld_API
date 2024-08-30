@@ -1,16 +1,16 @@
-package Controller
+package controller
 
 import (
-	"ComputerWorld_API/CW_Database"
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/database"
+	"ComputerWorld_API/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-var databaseCN = CW_Database.DatabaseCN
+var databaseCN = database.DatabaseCN
 
 func CreateProduct(c echo.Context) error {
-	productData := new(Model.Product)
+	productData := new(model.Product)
 
 	if err := c.Bind(productData); err != nil {
 		data := map[string]interface{}{
@@ -20,10 +20,14 @@ func CreateProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	newProduct := &Model.Product{
-		ProductName: productData.ProductName,
-		ProductCode: productData.ProductCode,
-		Price:       productData.Price,
+	databaseCN.Model(&model.Product{}).Association("Product")
+
+	newProduct := &model.Product{
+		ProductName:    productData.ProductName,
+		ProductCode:    productData.ProductCode,
+		ManufacturerID: productData.ManufacturerID,
+		Stock:          productData.Stock,
+		Price:          productData.Price,
 	}
 
 	if err := databaseCN.Create(&newProduct).Error; err != nil {
@@ -45,7 +49,7 @@ func GetProduct(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var product Model.Product
+	var product model.Product
 
 	if res := databaseCN.Where("product_id = ?", id).First(&product); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
@@ -61,7 +65,7 @@ func GetProduct(c echo.Context) error {
 func PutProduct(c echo.Context) error {
 
 	id := c.Param("id")
-	product := new(Model.Product)
+	product := new(model.Product)
 
 	if err := c.Bind(product); err != nil {
 		data := map[string]interface{}{
@@ -71,7 +75,7 @@ func PutProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingProduct := new(Model.Product)
+	existingProduct := new(model.Product)
 
 	if err := databaseCN.Where("product_id = ?", id).First(&existingProduct).Error; err != nil {
 		data := map[string]interface{}{
@@ -99,7 +103,7 @@ func PutProduct(c echo.Context) error {
 func DeleteProduct(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteProduct := new(Model.Product)
+	deleteProduct := new(model.Product)
 
 	err := databaseCN.Where("product_id = ?", id).Delete(&deleteProduct).Error
 	if err != nil {

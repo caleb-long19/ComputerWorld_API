@@ -1,13 +1,13 @@
-package Controller
+package controller
 
 import (
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func CreateManufacturer(c echo.Context) error {
-	manufacturerData := new(Model.Manufacturer)
+	manufacturerData := new(model.Manufacturer)
 
 	if err := c.Bind(manufacturerData); err != nil {
 		data := map[string]interface{}{
@@ -17,7 +17,7 @@ func CreateManufacturer(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	newManufacturer := &Model.Manufacturer{
+	newManufacturer := &model.Manufacturer{
 		ManufacturerName: manufacturerData.ManufacturerName,
 	}
 
@@ -40,7 +40,7 @@ func GetManufacturer(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var manufacturer Model.Manufacturer
+	var manufacturer model.Manufacturer
 
 	if res := databaseCN.Where("manufacturer_id = ?", id).First(&manufacturer); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
@@ -56,7 +56,7 @@ func GetManufacturer(c echo.Context) error {
 func PutManufacturer(c echo.Context) error {
 
 	id := c.Param("id")
-	manufacturer := new(Model.Manufacturer)
+	manufacturer := new(model.Manufacturer)
 
 	if err := c.Bind(manufacturer); err != nil {
 		data := map[string]interface{}{
@@ -66,7 +66,7 @@ func PutManufacturer(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingManufacturer := new(Model.Manufacturer)
+	existingManufacturer := new(model.Manufacturer)
 
 	if err := databaseCN.Where("manufacturer_id = ?", id).First(&existingManufacturer).Error; err != nil {
 		data := map[string]interface{}{
@@ -94,7 +94,7 @@ func PutManufacturer(c echo.Context) error {
 func DeleteManufacturer(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteManufacturer := new(Model.Manufacturer)
+	deleteManufacturer := new(model.Manufacturer)
 
 	err := databaseCN.Where("manufacturer_id = ?", id).Delete(&deleteManufacturer).Error
 	if err != nil {

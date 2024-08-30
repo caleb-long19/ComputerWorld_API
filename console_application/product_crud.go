@@ -1,14 +1,18 @@
-package Console_Application
+package console_application
 
 import (
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/database"
+	"ComputerWorld_API/model"
 	"fmt"
 	"strconv"
 	"time"
 )
 
+var findProduct string
+var newProduct string
+
 func createNewProduct() {
-	productData := Model.ProductInformation{
+	productData := model.ProductInformation{
 		ProductCode:  "",
 		ProductName:  "",
 		ProductPrice: 0.0,
@@ -35,7 +39,7 @@ func createNewProduct() {
 	assertRecordInputError()
 
 	//store results of create data
-	result := DatabaseCN.Create(&productRecords)
+	result := database.DatabaseCN.Create(&productRecords)
 
 	// Check errors and print results to console
 	if result.Error != nil {
@@ -52,7 +56,7 @@ func updateProductRecords() {
 
 	fmt.Println("Please enter the updated product name: ")
 	newProduct = scanUserInput(newProduct)
-	DatabaseCN.Model(&Model.Product{}).Select("ProductName").Where("ProductName = ?", findProduct).Updates(map[string]interface{}{"ProductName": newProduct})
+	database.DatabaseCN.Model(&model.Product{}).Select("ProductName").Where("ProductName = ?", findProduct).Updates(map[string]interface{}{"ProductName": newProduct})
 	fmt.Println("Product name has been changed!")
 
 	ProductInformationApplication()
@@ -63,7 +67,7 @@ func deleteProduct() {
 	fmt.Println("Deleting Product Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Product: ", selectRecord)
-	DatabaseCN.Where("ProductName = ?", selectRecord).Delete(&Model.Product{})
+	database.DatabaseCN.Where("ProductName = ?", selectRecord).Delete(&model.Product{})
 	ProductInformationApplication()
 }
 
@@ -92,4 +96,8 @@ func ProductInformationApplication() {
 		time.Sleep(1 * time.Second)
 		cwIntroduction()
 	}
+}
+
+func storeProductDetails(code, name string, price float64) {
+	productRecords = model.Product{ProductCode: code, ProductName: name, Price: price}
 }
