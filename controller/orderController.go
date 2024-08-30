@@ -18,8 +18,14 @@ func CreateOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
+	var priceValue = model.Product{ProductID: orderData.ProductID}
+	databaseCN.Model(priceValue).Where("product_id = ?", orderData.ProductID).Select("price").Find(&priceValue)
+
 	newOrder := &model.Order{
-		OrderAmount: orderData.OrderAmount,
+		OrderRef:     orderData.OrderRef,
+		ProductID:    orderData.ProductID,
+		OrderAmount:  orderData.OrderAmount,
+		ProductPrice: priceValue.Price * float64(orderData.OrderAmount),
 	}
 
 	if err := databaseCN.Create(&newOrder).Error; err != nil {
@@ -46,6 +52,8 @@ func GetOrder(c echo.Context) error {
 	if res := databaseCN.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
+
+	databaseCN.Preload("Order").Preload("Product").Joins("Product").Find(&order)
 
 	response := map[string]interface{}{
 		"Order_Data": order,

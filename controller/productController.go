@@ -86,7 +86,10 @@ func PutProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
+	existingProduct.ProductCode = product.ProductCode
 	existingProduct.ProductName = product.ProductName
+	existingProduct.Stock = product.Stock
+	existingProduct.Price = product.Price
 
 	if err := databaseCN.Save(&existingProduct).Error; err != nil {
 		data := map[string]interface{}{
