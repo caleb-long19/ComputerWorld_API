@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"ComputerWorld_API/controller"
@@ -6,11 +6,7 @@ import (
 	"net/http"
 )
 
-func main() {
-	apiServer()
-}
-
-func apiServer() {
+func Echo() *echo.Echo {
 	e := echo.New()
 
 	manufacturerRoute := e.Group("/manufacturer")
@@ -40,6 +36,5 @@ func apiServer() {
 	orderRoute.PUT("/:id", controller.PutOrder)
 	orderRoute.DELETE("/:id", controller.DeleteOrder)
 
-	// RUn server
-	e.Logger.Fatal(e.Start(":5000"))
+	return e
 }

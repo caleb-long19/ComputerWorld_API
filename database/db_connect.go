@@ -7,11 +7,12 @@ import (
 )
 
 // Database Connection
-var DatabaseCN = DatabaseConnection("database/computer_world.db")
+var DatabaseCN = DatabaseConnection("computer_world.db")
 
 // DatabaseConnection Opens the database connection
-func DatabaseConnection(databaseName string) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(databaseName), &gorm.Config{})
+func DatabaseConnection(dbFilePath string) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
+	println("Database Name: ", dbFilePath)
 
 	if err != nil {
 		panic("failed to connect database")

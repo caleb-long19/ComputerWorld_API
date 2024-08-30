@@ -11,16 +11,17 @@ import (
 	"time"
 )
 
-// Database
-var productRecords model.Product
-var manufacturerRecords model.Manufacturer
+var (
+	// Database
+	productRecords      model.Product
+	manufacturerRecords model.Manufacturer
 
-// Repeat Application
-var choosePage string
-var selectRecord string
+	choosePage   string
+	selectRecord string
 
-var appType string
-var CheckRecordExists bool
+	appType           string
+	CheckRecordExists bool
+)
 
 func main() {
 
