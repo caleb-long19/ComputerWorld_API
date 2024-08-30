@@ -55,6 +55,8 @@ func GetProduct(c echo.Context) error {
 		return c.String(http.StatusNotFound, id)
 	}
 
+	databaseCN.Preload("Product").Preload("Manufacturer").Find(&product)
+
 	response := map[string]interface{}{
 		"Product_Data": product,
 	}

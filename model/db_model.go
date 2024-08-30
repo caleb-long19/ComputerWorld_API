@@ -11,9 +11,8 @@ type Product struct {
 }
 
 type Manufacturer struct {
-	// Variables that will store user input product data
-	ID               int    `gorm:"primaryKey;autoIncrement" json:"manufacturer_id"`
-	ManufacturerName string `gorm:"unique" json:"manufacturer_name"`
+	ManufacturerID   int    `gorm:"primaryKey;autoIncrement"`
+	ManufacturerName string `gorm:"unique"`
 }
 
 type Order struct {
