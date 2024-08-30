@@ -1,7 +1,9 @@
-package Console_Application
+package console_application
 
 import (
-	"ComputerWorld_API/CW_Database"
+	"ComputerWorld_API/database"
+	"ComputerWorld_API/model"
+	"bufio"
 	"fmt"
 	"gorm.io/gorm"
 	"log"
@@ -9,8 +11,13 @@ import (
 	"time"
 )
 
-// Database Connection
-var DatabaseCN = CW_Database.DatabaseConnection("CW_Database/Computer_world.db")
+// Database
+var productRecords model.Product
+var manufacturerRecords model.Manufacturer
+
+// Repeat Application
+var choosePage string
+var selectRecord string
 
 var appType string
 var CheckRecordExists bool
@@ -69,7 +76,7 @@ func cwIntroduction() {
 
 // Error Handling (Prevent duplicates and wrong inputs)
 func assertRecordInputError() {
-	err := DatabaseCN.Model(productRecords).
+	err := database.DatabaseCN.Model(productRecords).
 		Select("count(*) > 0").
 		Where("id = ? AND `ProductCode` = ? AND `ProductName` = ?", productRecords.ProductID, productRecords.ProductCode, productRecords.ProductName).
 		Find(&CheckRecordExists).Error
@@ -81,6 +88,14 @@ func assertRecordInputError() {
 			log.Fatalf("Database Error Found: %s", err.Error())
 		}
 	}
+}
+
+func scanUserInput(scanInput string) string {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	scanInput = scanner.Text()
+
+	return scanInput
 }
 
 // Clear string data to reset user inputs

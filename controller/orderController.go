@@ -1,14 +1,14 @@
-package Controller
+package controller
 
 import (
-	"ComputerWorld_API/Console_Application"
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/database"
+	"ComputerWorld_API/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func CreateOrder(c echo.Context) error {
-	orderData := new(Model.Order)
+	orderData := new(model.Order)
 
 	if err := c.Bind(orderData); err != nil {
 		data := map[string]interface{}{
@@ -18,8 +18,7 @@ func CreateOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	newOrder := &Model.Order{
-		ProductID:   orderData.ProductID,
+	newOrder := &model.Order{
 		OrderAmount: orderData.OrderAmount,
 	}
 
@@ -42,7 +41,7 @@ func GetOrder(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var order Model.Order
+	var order model.Order
 
 	if res := databaseCN.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
@@ -58,7 +57,7 @@ func GetOrder(c echo.Context) error {
 func PutOrder(c echo.Context) error {
 
 	id := c.Param("id")
-	order := new(Model.Order)
+	order := new(model.Order)
 
 	if err := c.Bind(order); err != nil {
 		data := map[string]interface{}{
@@ -68,7 +67,7 @@ func PutOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingOrder := new(Model.Order)
+	existingOrder := new(model.Order)
 
 	if err := databaseCN.Where("order_id = ?", id).First(&order).Error; err != nil {
 		data := map[string]interface{}{
@@ -79,7 +78,7 @@ func PutOrder(c echo.Context) error {
 
 	existingOrder.OrderAmount = order.OrderAmount
 
-	if err := Console_Application.DatabaseCN.Save(&existingOrder).Error; err != nil {
+	if err := database.DatabaseCN.Save(&existingOrder).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -96,7 +95,7 @@ func PutOrder(c echo.Context) error {
 func DeleteOrder(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteOrder := new(Model.Order)
+	deleteOrder := new(model.Order)
 
 	err := databaseCN.Where("order_id = ?", id).Delete(&deleteOrder).Error
 	if err != nil {

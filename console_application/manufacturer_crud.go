@@ -1,14 +1,18 @@
-package Console_Application
+package console_application
 
 import "C"
 import (
-	"ComputerWorld_API/Model"
+	"ComputerWorld_API/database"
+	"ComputerWorld_API/model"
 	"fmt"
 	"time"
 )
 
+var findManufacturer string
+var newManufacturer string
+
 func createNewManufacturer() {
-	manufacturerInfo := Model.Manufacturer{
+	manufacturerInfo := model.Manufacturer{
 		ManufacturerName: "",
 	}
 
@@ -21,7 +25,7 @@ func createNewManufacturer() {
 	storeManufacturer(mName)
 
 	//store results of employee
-	result := DatabaseCN.Create(&manufacturerRecords)
+	result := database.DatabaseCN.Create(&manufacturerRecords)
 
 	// Check errors and print results to console
 	if result.Error != nil {
@@ -38,7 +42,7 @@ func updateManufacturerRecords() {
 
 	fmt.Println("Please Enter The New ProductName: ")
 	newManufacturer = scanUserInput(newManufacturer)
-	DatabaseCN.Model(&Model.Manufacturer{}).Select("manufacturer_name").Where("manufacturer_name = ?", findManufacturer).Updates(map[string]interface{}{"manufacturer_name": newManufacturer})
+	database.DatabaseCN.Model(&model.Manufacturer{}).Select("manufacturer_name").Where("manufacturer_name = ?", findManufacturer).Updates(map[string]interface{}{"manufacturer_name": newManufacturer})
 	fmt.Println("ProductName has been changed!")
 
 	ProductInformationApplication()
@@ -49,7 +53,7 @@ func deleteManufacturer() {
 	fmt.Println("Deleting Manufacturer Records:")
 	selectRecord = scanUserInput(selectRecord)
 	fmt.Println("Deleting Manufacturer Data: ", selectRecord)
-	DatabaseCN.Where("manufacturer_name = ?", selectRecord).Delete(&Model.Manufacturer{})
+	database.DatabaseCN.Where("manufacturer_name = ?", selectRecord).Delete(&model.Manufacturer{})
 	ManufacturerInformationApplication()
 }
 
@@ -78,4 +82,8 @@ func ManufacturerInformationApplication() {
 		time.Sleep(1 * time.Second)
 		cwIntroduction()
 	}
+}
+
+func storeManufacturer(name string) {
+	manufacturerRecords = model.Manufacturer{ManufacturerName: name}
 }
