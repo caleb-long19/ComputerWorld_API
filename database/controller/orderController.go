@@ -2,13 +2,13 @@ package controller
 
 import (
 	"ComputerWorld_API/database"
-	"ComputerWorld_API/model"
+	model2 "ComputerWorld_API/database/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func CreateOrder(c echo.Context) error {
-	orderData := new(model.Order)
+	orderData := new(model2.Order)
 
 	if err := c.Bind(orderData); err != nil {
 		data := map[string]interface{}{
@@ -18,10 +18,10 @@ func CreateOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	var priceValue = model.Product{ProductID: orderData.ProductID}
+	var priceValue = model2.Product{ProductID: orderData.ProductID}
 	databaseCN.Model(priceValue).Where("product_id = ?", orderData.ProductID).Select("price").Find(&priceValue)
 
-	newOrder := &model.Order{
+	newOrder := &model2.Order{
 		OrderRef:     orderData.OrderRef,
 		ProductID:    orderData.ProductID,
 		OrderAmount:  orderData.OrderAmount,
@@ -47,7 +47,7 @@ func GetOrder(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var order model.Order
+	var order model2.Order
 
 	if res := databaseCN.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
@@ -65,7 +65,7 @@ func GetOrder(c echo.Context) error {
 func PutOrder(c echo.Context) error {
 
 	id := c.Param("id")
-	order := new(model.Order)
+	order := new(model2.Order)
 
 	if err := c.Bind(order); err != nil {
 		data := map[string]interface{}{
@@ -75,7 +75,7 @@ func PutOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingOrder := new(model.Order)
+	existingOrder := new(model2.Order)
 
 	if err := databaseCN.Where("order_id = ?", id).First(&order).Error; err != nil {
 		data := map[string]interface{}{
@@ -103,7 +103,7 @@ func PutOrder(c echo.Context) error {
 func DeleteOrder(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteOrder := new(model.Order)
+	deleteOrder := new(model2.Order)
 
 	err := databaseCN.Where("order_id = ?", id).Delete(&deleteOrder).Error
 	if err != nil {
