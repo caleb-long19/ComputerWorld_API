@@ -2,7 +2,7 @@ package controller
 
 import (
 	"ComputerWorld_API/database"
-	"ComputerWorld_API/model"
+	"ComputerWorld_API/database/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

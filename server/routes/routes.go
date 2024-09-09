@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"ComputerWorld_API/controller"
+	controller2 "ComputerWorld_API/database/controller"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -19,22 +19,22 @@ func Echo() *echo.Echo {
 	})
 
 	// Initialise Manufacturer CRUD
-	manufacturerRoute.GET("/:id", controller.GetManufacturer)
-	manufacturerRoute.POST("/", controller.CreateManufacturer)
-	manufacturerRoute.PUT("/:id", controller.PutManufacturer)
-	manufacturerRoute.DELETE("/:id", controller.DeleteManufacturer)
+	manufacturerRoute.GET("/:id", controller2.GetManufacturer)
+	manufacturerRoute.POST("/", controller2.CreateManufacturer)
+	manufacturerRoute.PUT("/:id", controller2.PutManufacturer)
+	manufacturerRoute.DELETE("/:id", controller2.DeleteManufacturer)
 
 	// Initialise Product CRUD
-	productRoute.GET("/:id", controller.GetProduct)
-	productRoute.POST("/", controller.CreateProduct)
-	productRoute.PUT("/:id", controller.PutProduct)
-	productRoute.DELETE("/:id", controller.DeleteProduct)
+	productRoute.GET("/:id", controller2.GetProduct)
+	productRoute.POST("/", controller2.CreateProduct)
+	productRoute.PUT("/:id", controller2.PutProduct)
+	productRoute.DELETE("/:id", controller2.DeleteProduct)
 
 	// Initialise Stock CRUD
-	orderRoute.GET("/:id", controller.GetOrder)
-	orderRoute.POST("/", controller.CreateOrder)
-	orderRoute.PUT("/:id", controller.PutOrder)
-	orderRoute.DELETE("/:id", controller.DeleteOrder)
+	orderRoute.GET("/:id", controller2.GetOrder)
+	orderRoute.POST("/", controller2.CreateOrder)
+	orderRoute.PUT("/:id", controller2.PutOrder)
+	orderRoute.DELETE("/:id", controller2.DeleteOrder)
 
 	return e
 }

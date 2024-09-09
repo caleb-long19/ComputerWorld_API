@@ -1,7 +1,7 @@
 package database
 
 import (
-	"ComputerWorld_API/model"
+	model2 "ComputerWorld_API/database/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -19,11 +19,11 @@ func DatabaseConnection(dbFilePath string) *gorm.DB {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&model.Manufacturer{})
+	db.AutoMigrate(&model2.Manufacturer{})
 
-	db.AutoMigrate(&model.Product{})
+	db.AutoMigrate(&model2.Product{})
 
-	db.AutoMigrate(&model.Order{})
+	db.AutoMigrate(&model2.Order{})
 
 	return db
 }
