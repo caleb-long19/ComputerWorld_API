@@ -1,15 +1,22 @@
 package controller
 
 import (
-	"ComputerWorld_API/database"
 	"ComputerWorld_API/database/model"
+	"fmt"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"net/http"
 )
 
-var databaseCN = database.DatabaseCN
+type ProductController struct {
+	Db *gorm.DB
+}
 
-func CreateProduct(c echo.Context) error {
+func NewProductController(db *gorm.DB) *ProductController {
+	return &ProductController{Db: db}
+}
+
+func (h *ProductController) CreateProduct(c echo.Context) error {
 	productData := new(model.Product)
 
 	if err := c.Bind(productData); err != nil {
@@ -20,7 +27,7 @@ func CreateProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	databaseCN.Model(&model.Product{}).Association("Product")
+	h.Db.Model(&model.Product{}).Association("Product")
 
 	newProduct := &model.Product{
 		ProductName:    productData.ProductName,
@@ -30,7 +37,7 @@ func CreateProduct(c echo.Context) error {
 		Price:          productData.Price,
 	}
 
-	if err := databaseCN.Create(&newProduct).Error; err != nil {
+	if err := h.Db.Create(&newProduct).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -45,26 +52,20 @@ func CreateProduct(c echo.Context) error {
 	return c.JSON(http.StatusCreated, response)
 }
 
-func GetProduct(c echo.Context) error {
+func (h *ProductController) GetProduct(c echo.Context) error {
 
 	id := c.Param("id")
 
 	var product model.Product
 
-	if res := databaseCN.Where("product_id = ?", id).First(&product); res.Error != nil {
+	if res := h.Db.Where("product_id = ?", id).First(&product); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
-	databaseCN.Preload("Product").Preload("Manufacturer").Find(&product)
-
-	response := map[string]interface{}{
-		"Product_Data": product,
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, fmt.Sprintf("product_id %v", product.ProductID))
 }
 
-func PutProduct(c echo.Context) error {
+func (h *ProductController) PutProduct(c echo.Context) error {
 
 	id := c.Param("id")
 	product := new(model.Product)
@@ -79,7 +80,7 @@ func PutProduct(c echo.Context) error {
 
 	existingProduct := new(model.Product)
 
-	if err := databaseCN.Where("product_id = ?", id).First(&existingProduct).Error; err != nil {
+	if err := h.Db.Where("product_id = ?", id).First(&existingProduct).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -91,7 +92,7 @@ func PutProduct(c echo.Context) error {
 	existingProduct.Stock = product.Stock
 	existingProduct.Price = product.Price
 
-	if err := databaseCN.Save(&existingProduct).Error; err != nil {
+	if err := h.Db.Save(&existingProduct).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -105,23 +106,14 @@ func PutProduct(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func DeleteProduct(c echo.Context) error {
+func (h *ProductController) DeleteProduct(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteProduct := new(model.Product)
-
-	err := databaseCN.Where("product_id = ?", id).Delete(&deleteProduct).Error
+	err := h.Db.Where("product_id = ?", id).Delete(&model.Product{}).Error
 	if err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
 
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusInternalServerError, "Could not delete product")
 	}
 
-	response := map[string]interface{}{
-		"message": "Product has been deleted",
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, "Product has been deleted")
 }

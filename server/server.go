@@ -1,16 +1,25 @@
-package main
+package server
 
 import (
-	"ComputerWorld_API/server/routes"
+	"ComputerWorld_API/database"
+	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
-func NewServer() {
-	e := routes.Echo()
-
-	// Execute server
-	e.Logger.Fatal(e.Start(":5000"))
+type Server struct {
+	Echo     *echo.Echo
+	Database *gorm.DB
 }
 
-func main() {
-	NewServer()
+func NewServer() *Server {
+	s := &Server{
+		Echo:     echo.New(),
+		Database: database.DatabaseConnection(),
+	}
+
+	return s
+}
+
+func (s *Server) Start(addr string) error {
+	return s.Echo.Start(":" + addr)
 }
