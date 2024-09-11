@@ -83,15 +83,24 @@ func TestPutProduct(t *testing.T) {
 
 	request := helpers.Request{
 		Method: http.MethodPut,
-		Url:    "/product/1",
+		Url:    "/product",
 	}
+
+	product := &model.Product{
+		ProductCode:    "TESTREF",
+		ProductName:    "Super Box 360",
+		ManufacturerID: 2,
+		Stock:          350,
+		Price:          400,
+	}
+	ts.S.Database.Create(product)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Test 1 - Update Product by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    request.Url,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
 			},
 			RequestBody: model.Product{
 				ProductCode:    "CHZXMG45J",
@@ -125,33 +134,45 @@ func TestPutProduct(t *testing.T) {
 }
 
 func TestDeleteProduct(t *testing.T) {
+	ts.ClearTable("products")
+
 	request := helpers.Request{
 		Method: http.MethodDelete,
-		Url:    "/product/1",
+		Url:    "/product",
 	}
+
+	product := &model.Product{
+		ProductCode:    "TESTREF",
+		ProductName:    "TEST_PRODUCT",
+		ManufacturerID: 2,
+		Stock:          350,
+		Price:          400,
+	}
+	ts.S.Database.Create(product)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Delete product by id",
+			TestName: "Test 1 - Delete product by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    request.Url,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Product has been deleted",
+				BodyPart:   "Success: Product has been deleted",
 			},
 		},
-		//{
-		//	TestName: "Return 404 if a string is used to delete a manufacturer",
-		//	Request: helpers.Request{
-		//		Method: request.Method,
-		//		Url:    "/manufacturer/NAME",
-		//	},
-		//	Expected: helpers.ExpectedResponse{
-		//		StatusCode: http.StatusNotFound,
-		//	},
-		//},
+		{
+			TestName: "Test 2 - Error 404: Fail to find and delete product by ID",
+			Request: helpers.Request{
+				Method: http.MethodDelete,
+				Url:    "/product/1000",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+				BodyPart:   "Error: Could not find product by that ID",
+			},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.TestName, func(t *testing.T) {

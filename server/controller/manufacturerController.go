@@ -62,11 +62,7 @@ func (h *ManufacturerController) PutManufacturer(c echo.Context) error {
 	manufacturer := new(model.Manufacturer)
 
 	if err := c.Bind(manufacturer); err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusBadRequest, "Error: Could not bind manufacturer data")
 	}
 
 	existingManufacturer := new(model.Manufacturer)

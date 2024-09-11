@@ -88,6 +88,7 @@ func (h *ProductController) PutProduct(c echo.Context) error {
 
 	existingProduct.ProductCode = product.ProductCode
 	existingProduct.ProductName = product.ProductName
+	existingProduct.ManufacturerID = product.ManufacturerID
 	existingProduct.Stock = product.Stock
 	existingProduct.Price = product.Price
 

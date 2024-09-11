@@ -101,15 +101,20 @@ func TestPutManufacturer(t *testing.T) {
 
 	request := helpers.Request{
 		Method: http.MethodPut,
-		Url:    "/manufacturer/2",
+		Url:    "/manufacturer",
 	}
+
+	mf := &model.Manufacturer{
+		ManufacturerName: "Microsoft",
+	}
+	ts.S.Database.Create(mf)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Test 1 - Update Manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    request.Url,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
 			},
 			RequestBody: model.Manufacturer{
 				ManufacturerName: "Akira",
@@ -142,16 +147,21 @@ func TestDeleteManufacturer(t *testing.T) {
 	ts.ClearTable("manufacturers")
 
 	request := helpers.Request{
-		Method: http.MethodGet,
-		Url:    "/manufacturer/3",
+		Method: http.MethodDelete,
+		Url:    "/manufacturer",
 	}
+
+	mf := &model.Manufacturer{
+		ManufacturerName: "Microsoft",
+	}
+	ts.S.Database.Create(mf)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Test 1 - Delete manufacturer by ID",
 			Request: helpers.Request{
-				Method: http.MethodDelete,
-				Url:    request.Url,
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
