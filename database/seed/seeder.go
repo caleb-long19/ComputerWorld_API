@@ -1,4 +1,4 @@
-package seeder
+package seed
 
 import "gorm.io/gorm"
 

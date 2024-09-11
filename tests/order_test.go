@@ -48,6 +48,80 @@ func TestGetOrder(t *testing.T) {
 	}
 }
 
+//func TestPostOrder(t *testing.T) {
+//	ts.ClearTable("orders")
+//
+//	request := helpers.Request{
+//		Method: http.MethodPost,
+//		Url:    "/order",
+//	}
+//
+//	cases := []helpers.TestCase{
+//		{
+//			TestName: "Test 1 - Create Order",
+//			Request: helpers.Request{
+//				Method: request.Method,
+//				Url:    request.Url,
+//			},
+//			Expected: helpers.ExpectedResponse{
+//				StatusCode: http.StatusCreated,
+//				BodyPart:   "Order created successfully",
+//			},
+//		},
+//	}
+//	for _, testCase := range cases {
+//		t.Run(testCase.TestName, func(t *testing.T) {
+//			ts.ExecuteTest(t, &testCase)
+//		})
+//	}
+//
+//}
+
+func TestPutOrder(t *testing.T) {
+	ts.ClearTable("orders")
+
+	request := helpers.Request{
+		Method: http.MethodPut,
+		Url:    "/order/1",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Test 1 - Update Order by ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Order{
+				OrderRef:     "VBJC53",
+				OrderAmount:  1,
+				ProductID:    2,
+				ProductPrice: 350,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
+				BodyPart:   "Order updated successfully",
+			},
+		},
+		{
+			TestName: "Test 2 - Error 404: Fail to find and update order by ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+				BodyPart:   "Error: Could not find order by that ID",
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+}
+
 func TestDeleteOrder(t *testing.T) {
 
 	request := helpers.Request{

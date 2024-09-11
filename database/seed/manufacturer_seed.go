@@ -1,4 +1,4 @@
-package seeder
+package seed
 
 import (
 	"ComputerWorld_API/database/model"
