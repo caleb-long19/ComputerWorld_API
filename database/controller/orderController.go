@@ -1,71 +1,62 @@
 package controller
 
 import (
-	"ComputerWorld_API/database"
-	model2 "ComputerWorld_API/database/model"
+	mdl "ComputerWorld_API/database/model"
+	"fmt"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"net/http"
 )
 
-func CreateOrder(c echo.Context) error {
-	orderData := new(model2.Order)
-
-	if err := c.Bind(orderData); err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
-	}
-
-	var priceValue = model2.Product{ProductID: orderData.ProductID}
-	databaseCN.Model(priceValue).Where("product_id = ?", orderData.ProductID).Select("price").Find(&priceValue)
-
-	newOrder := &model2.Order{
-		OrderRef:     orderData.OrderRef,
-		ProductID:    orderData.ProductID,
-		OrderAmount:  orderData.OrderAmount,
-		ProductPrice: priceValue.Price * float64(orderData.OrderAmount),
-	}
-
-	if err := databaseCN.Create(&newOrder).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
-	}
-
-	response := map[string]interface{}{
-		"Order_Data": newOrder,
-	}
-
-	return c.JSON(http.StatusCreated, response)
+type OrderController struct {
+	Db *gorm.DB
 }
 
-func GetOrder(c echo.Context) error {
+func NewOrderController(db *gorm.DB) *OrderController {
+	return &OrderController{Db: db}
+}
+
+func (h *OrderController) CreateOrder(c echo.Context) error {
+	order := new(mdl.Order)
+
+	if err := c.Bind(order); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	var priceValue = mdl.Product{ProductID: order.ProductID}
+	h.Db.Model(priceValue).Where("product_id = ?", order.ProductID).Select("price").Find(&priceValue)
+
+	newOrder := &mdl.Order{
+		OrderRef:     order.OrderRef,
+		ProductID:    order.ProductID,
+		OrderAmount:  order.OrderAmount,
+		ProductPrice: priceValue.Price * float64(order.OrderAmount),
+	}
+
+	if err := h.Db.Create(&newOrder).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusCreated, fmt.Sprintf("order_id %v", order.OrderID))
+}
+
+func (h *OrderController) GetOrder(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var order model2.Order
+	var order mdl.Order
 
-	if res := databaseCN.Where("order_id = ?", id).First(&order); res.Error != nil {
+	if res := h.Db.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
-	databaseCN.Preload("Order").Preload("Product").Joins("Product").Find(&order)
-
-	response := map[string]interface{}{
-		"Order_Data": order,
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, fmt.Sprintf("order_id %v", order.OrderID))
 }
 
-func PutOrder(c echo.Context) error {
+func (h *OrderController) PutOrder(c echo.Context) error {
 
 	id := c.Param("id")
-	order := new(model2.Order)
+	order := new(mdl.Order)
 
 	if err := c.Bind(order); err != nil {
 		data := map[string]interface{}{
@@ -75,9 +66,9 @@ func PutOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, data)
 	}
 
-	existingOrder := new(model2.Order)
+	existingOrder := new(mdl.Order)
 
-	if err := databaseCN.Where("order_id = ?", id).First(&order).Error; err != nil {
+	if err := h.Db.Where("order_id = ?", id).First(&order).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -86,7 +77,7 @@ func PutOrder(c echo.Context) error {
 
 	existingOrder.OrderAmount = order.OrderAmount
 
-	if err := database.DatabaseCN.Save(&existingOrder).Error; err != nil {
+	if err := h.Db.Save(&existingOrder).Error; err != nil {
 		data := map[string]interface{}{
 			"message": err.Error(),
 		}
@@ -100,23 +91,13 @@ func PutOrder(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func DeleteOrder(c echo.Context) error {
+func (h *OrderController) DeleteOrder(c echo.Context) error {
 	id := c.Param("id")
 
-	deleteOrder := new(model2.Order)
-
-	err := databaseCN.Where("order_id = ?", id).Delete(&deleteOrder).Error
+	err := h.Db.Where("order_id = ?", id).Delete(&mdl.Order{}).Error
 	if err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusNotFound, "Could not delete order")
 	}
 
-	response := map[string]interface{}{
-		"message": "Order has been deleted",
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, "Order has been deleted")
 }
