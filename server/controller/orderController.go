@@ -1,7 +1,7 @@
 package controller
 
 import (
-	mdl "ComputerWorld_API/database/model"
+	"ComputerWorld_API/database/model"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -17,16 +17,16 @@ func NewOrderController(db *gorm.DB) *OrderController {
 }
 
 func (h *OrderController) CreateOrder(c echo.Context) error {
-	order := new(mdl.Order)
+	order := new(model.Order)
 
 	if err := c.Bind(order); err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	var priceValue = mdl.Product{ProductID: order.ProductID}
+	var priceValue = model.Product{ProductID: order.ProductID}
 	h.Db.Model(priceValue).Where("product_id = ?", order.ProductID).Select("price").Find(&priceValue)
 
-	newOrder := &mdl.Order{
+	newOrder := &model.Order{
 		OrderRef:     order.OrderRef,
 		ProductID:    order.ProductID,
 		OrderAmount:  order.OrderAmount,
@@ -44,60 +44,56 @@ func (h *OrderController) GetOrder(c echo.Context) error {
 
 	id := c.Param("id")
 
-	var order mdl.Order
+	var order model.Order
 
 	if res := h.Db.Where("order_id = ?", id).First(&order); res.Error != nil {
 		return c.String(http.StatusNotFound, id)
 	}
 
+	response := map[string]interface{}{
+		"order": order,
+	}
+
+	println(c.JSON(http.StatusOK, response))
 	return c.JSON(http.StatusOK, fmt.Sprintf("order_id %v", order.OrderID))
 }
 
 func (h *OrderController) PutOrder(c echo.Context) error {
 
 	id := c.Param("id")
-	order := new(mdl.Order)
+	order := new(model.Order)
 
 	if err := c.Bind(order); err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusNotFound, "Error: Could not bind order")
 	}
 
-	existingOrder := new(mdl.Order)
+	existingOrder := new(model.Order)
 
 	if err := h.Db.Where("order_id = ?", id).First(&order).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusNotFound, "Error: Could not find order by that ID")
 	}
 
 	existingOrder.OrderAmount = order.OrderAmount
 
 	if err := h.Db.Save(&existingOrder).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusBadRequest, "Error: Could not save order")
 	}
 
-	response := map[string]interface{}{
-		"Order_Data": existingOrder,
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, "Order updated successfully")
 }
 
 func (h *OrderController) DeleteOrder(c echo.Context) error {
-	id := c.Param("id")
+	var order model.Order
 
-	err := h.Db.Where("order_id = ?", id).Delete(&mdl.Order{}).Error
-	if err != nil {
-		return c.JSON(http.StatusNotFound, "Could not delete order")
+	result := h.Db.Where("product_id = ?", c.Param("id")).First(&order)
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, "Error: Could not find order by that ID")
 	}
 
-	return c.JSON(http.StatusOK, "Order has been deleted")
+	result = h.Db.Delete(&order)
+	if result.Error != nil {
+		return c.JSON(http.StatusBadRequest, "Error: Could not delete order by that ID")
+	}
+
+	return c.JSON(http.StatusOK, "Success: Order has been deleted")
 }

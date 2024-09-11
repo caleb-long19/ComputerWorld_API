@@ -49,8 +49,82 @@ func TestGetProduct(t *testing.T) {
 	}
 }
 
-func TestDeleteProduct(t *testing.T) {
+//func TestPostProduct(t *testing.T) {
+//	ts.ClearTable("products")
+//
+//	request := helpers.Request{
+//		Method: http.MethodPost,
+//		Url:    "/product",
+//	}
+//
+//	cases := []helpers.TestCase{
+//		{
+//			TestName: "Test 1 - Create Product",
+//			Request: helpers.Request{
+//				Method: request.Method,
+//				Url:    request.Url,
+//			},
+//			Expected: helpers.ExpectedResponse{
+//				StatusCode: http.StatusCreated,
+//				BodyPart:   "Product created successfully",
+//			},
+//		},
+//	}
+//	for _, testCase := range cases {
+//		t.Run(testCase.TestName, func(t *testing.T) {
+//			ts.ExecuteTest(t, &testCase)
+//		})
+//	}
+//
+//}
 
+func TestPutProduct(t *testing.T) {
+	ts.ClearTable("products")
+
+	request := helpers.Request{
+		Method: http.MethodPut,
+		Url:    "/product/1",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Test 1 - Update Product by ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Product{
+				ProductCode:    "CHZXMG45J",
+				ProductName:    "Xbox 1080",
+				ManufacturerID: 1,
+				Stock:          450,
+				Price:          250,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
+				BodyPart:   "Successfully updated product",
+			},
+		},
+		{
+			TestName: "Test 2 - Error 404: Fail to update product by ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+				BodyPart:   "Error: Could not find product by ID",
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+}
+
+func TestDeleteProduct(t *testing.T) {
 	request := helpers.Request{
 		Method: http.MethodDelete,
 		Url:    "/product/1",

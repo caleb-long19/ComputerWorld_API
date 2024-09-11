@@ -23,7 +23,6 @@ type TestCase struct {
 	ExpectedBody       string
 	Expected           ExpectedResponse
 	Setup              func(testCase *TestCase)
-	Teardown           func(testCase *TestCase, res *httptest.ResponseRecorder)
 	DisplayResponse    bool
 }
 
@@ -39,11 +38,9 @@ type Request struct {
 }
 
 type ExpectedResponse struct {
-	StatusCode       int
-	BodyPart         string
-	BodyParts        []string
-	BodyPartMissing  string
-	BodyPartsMissing []string
+	StatusCode int
+	BodyPart   string
+	BodyParts  []string
 }
 
 func (ts *TestServer) ExecuteTest(t *testing.T, testCase *TestCase) {
@@ -57,11 +54,6 @@ func (ts *TestServer) ExecuteTest(t *testing.T, testCase *TestCase) {
 	}
 	res := ts.ExecuteRequest(req)
 	ts.ValidateResults(t, testCase, res)
-
-	if testCase.Teardown != nil {
-		testCase.Teardown(testCase, res)
-	}
-
 }
 
 func (ts *TestServer) ExecuteRequest(req *http.Request) *httptest.ResponseRecorder {
@@ -98,7 +90,6 @@ func (ts *TestServer) GenerateRequest(testCase *TestCase) (*http.Request, error)
 }
 
 func (ts *TestServer) ValidateResults(t *testing.T, test *TestCase, res *httptest.ResponseRecorder) {
-
 	if test.DisplayResponse {
 		fmt.Println("Request Output: ")
 		fmt.Println(res.Body.String())
@@ -118,13 +109,13 @@ func (ts *TestServer) ValidateResults(t *testing.T, test *TestCase, res *httptes
 	}
 }
 
-// Need to create a clear table function
 func (ts *TestServer) ClearTable(tableName string) {
 	err := ts.S.Database.Exec(fmt.Sprintf("DELETE FROM %v", tableName)).Error
 	if err != nil {
 		log.Fatalf("You can't clear that table. Err: %v", err)
 	}
 
+	// TODO: CAUSING SOME PROBLEMS WITH SQLITE - NOT NEEDED AT THE MOMENT
 	//err = ts.S.Database.Exec(fmt.Sprintf("ALTER TABLE %v AUTO_INCREMENT = 1", tableName)).Error
 	//if err != nil {
 	//	log.Fatalf("Error setting autoincrement. Err: %v", err)

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"ComputerWorld_API/database/model"
-	rsp "ComputerWorld_API/server/response"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -35,21 +34,25 @@ func (h *ManufacturerController) PostManufacturer(c echo.Context) error {
 		return c.String(http.StatusOK, "Failed to create manufacturer")
 	}
 
-	log.Println(">>>> HERE ")
-
 	return c.JSON(http.StatusCreated, "Manufacturer created successfully")
 }
 
 func (h *ManufacturerController) GetManufacturer(c echo.Context) error {
-	log.Println(">>>> HERE ")
+	log.Println(">>>> MANUFACTURER GET ")
 
 	id := c.Param("id")
 
 	var manufacturer model.Manufacturer
+
 	if res := h.Db.Where("manufacturer_id = ?", id).First(&manufacturer); res.Error != nil {
-		return c.JSON(http.StatusNotFound, "record was not found")
+		return c.JSON(http.StatusNotFound, "Could not find manufacturer by that ID")
 	}
 
+	response := map[string]interface{}{
+		"manufacturer": manufacturer,
+	}
+
+	println(c.JSON(http.StatusOK, response))
 	return c.JSON(http.StatusOK, fmt.Sprintf("manufacturer_id %v", manufacturer.ManufacturerID))
 }
 
@@ -69,37 +72,31 @@ func (h *ManufacturerController) PutManufacturer(c echo.Context) error {
 	existingManufacturer := new(model.Manufacturer)
 
 	if err := h.Db.Where("manufacturer_id = ?", id).First(&existingManufacturer).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusNotFound, "Error: Could not find manufacturer by that ID")
 	}
 
 	existingManufacturer.ManufacturerName = manufacturer.ManufacturerName
 
 	if err := h.Db.Save(&existingManufacturer).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusBadRequest, "Error: Could not update manufacturer information")
 	}
 
-	response := map[string]interface{}{
-		"Manufacturer_Data": existingManufacturer,
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, "Manufacturer updated successfully")
 }
 
 func (h *ManufacturerController) DeleteManufacturer(c echo.Context) error {
-	log.Println(">>>> HERE ")
 
-	id := c.Param("id")
+	var manufacturer model.Manufacturer
 
-	err := h.Db.Where("manufacturer_id = ?", id).Delete(&model.Manufacturer{}).Error
-	if err != nil {
-		return rsp.ErrorResponse(c, http.StatusNotFound, err)
+	result := h.Db.Where("manufacturer_id = ?", c.Param("id")).First(&manufacturer)
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, "Error: Could not find manufacturer by that ID")
 	}
 
-	return c.JSON(http.StatusOK, "Manufacturer has been deleted")
+	result = h.Db.Delete(&manufacturer)
+	if result.Error != nil {
+		return c.JSON(http.StatusBadRequest, "Error: Could not delete manufacturer by that ID")
+	}
+
+	return c.JSON(http.StatusOK, "Success: Manufacturer has been deleted")
 }
