@@ -59,21 +59,23 @@ func (h *OrderController) GetOrder(c echo.Context) error {
 }
 
 func (h *OrderController) PutOrder(c echo.Context) error {
-
 	id := c.Param("id")
 	order := new(model.Order)
 
 	if err := c.Bind(order); err != nil {
-		return c.JSON(http.StatusNotFound, "Error: Could not bind order")
+		return c.JSON(http.StatusBadRequest, "Error: Could not bind order")
 	}
 
 	existingOrder := new(model.Order)
 
-	if err := h.Db.Where("order_id = ?", id).First(&order).Error; err != nil {
+	if err := h.Db.Where("order_id = ?", id).First(&existingOrder).Error; err != nil {
 		return c.JSON(http.StatusNotFound, "Error: Could not find order by that ID")
 	}
 
+	existingOrder.OrderRef = order.OrderRef
 	existingOrder.OrderAmount = order.OrderAmount
+	existingOrder.ProductID = order.ProductID
+	existingOrder.ProductPrice = order.ProductPrice * float64(order.OrderAmount)
 
 	if err := h.Db.Save(&existingOrder).Error; err != nil {
 		return c.JSON(http.StatusBadRequest, "Error: Could not save order")
@@ -85,7 +87,7 @@ func (h *OrderController) PutOrder(c echo.Context) error {
 func (h *OrderController) DeleteOrder(c echo.Context) error {
 	var order model.Order
 
-	result := h.Db.Where("product_id = ?", c.Param("id")).First(&order)
+	result := h.Db.Where("order_id = ?", c.Param("id")).First(&order)
 	if result.Error != nil {
 		return c.JSON(http.StatusNotFound, "Error: Could not find order by that ID")
 	}

@@ -82,21 +82,29 @@ func TestPutOrder(t *testing.T) {
 
 	request := helpers.Request{
 		Method: http.MethodPut,
-		Url:    "/order/1",
+		Url:    "/order",
 	}
+
+	ord := &model.Order{
+		OrderRef:     "TESTREF",
+		OrderAmount:  10,
+		ProductID:    2,
+		ProductPrice: 350,
+	}
+	ts.S.Database.Create(ord)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Test 1 - Update Order by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    request.Url,
+				Url:    fmt.Sprintf("%v/%v", request.Url, ord.OrderID),
 			},
 			RequestBody: model.Order{
 				OrderRef:     "VBJC53",
-				OrderAmount:  1,
-				ProductID:    2,
-				ProductPrice: 350,
+				OrderAmount:  5,
+				ProductID:    1,
+				ProductPrice: 700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
@@ -123,34 +131,44 @@ func TestPutOrder(t *testing.T) {
 }
 
 func TestDeleteOrder(t *testing.T) {
+	ts.ClearTable("orders")
 
 	request := helpers.Request{
 		Method: http.MethodDelete,
-		Url:    "/order/1",
+		Url:    "/order",
 	}
+
+	order := &model.Order{
+		OrderRef:     "TESTREF",
+		OrderAmount:  15,
+		ProductID:    1,
+		ProductPrice: 1200,
+	}
+	ts.S.Database.Create(order)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Delete order by id",
+			TestName: "Test 1 - Delete order by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    request.Url,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Order has been deleted",
+				BodyPart:   "Success: Order has been deleted",
 			},
 		},
-		//{
-		//	TestName: "Return 404 if a string is used to delete a manufacturer",
-		//	Request: helpers.Request{
-		//		Method: request.Method,
-		//		Url:    "/manufacturer/NAME",
-		//	},
-		//	Expected: helpers.ExpectedResponse{
-		//		StatusCode: http.StatusNotFound,
-		//	},
-		//},
+		{
+			TestName: "Test 2 - Error 404: Fail to find and delete order by ID",
+			Request: helpers.Request{
+				Method: http.MethodDelete,
+				Url:    "/order/1000",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+				BodyPart:   "Error: Could not find order by that ID",
+			},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.TestName, func(t *testing.T) {
