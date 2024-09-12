@@ -8,6 +8,59 @@ import (
 	"testing"
 )
 
+func TestPostProduct(t *testing.T) {
+	ts.ClearTable("products")
+
+	request := helpers.Request{
+		Method: http.MethodPost,
+		Url:    "/product/",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Can create a Product",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{`"product_name":"Xbox Series Z"`},
+			},
+		},
+		{
+			TestName: "Cannot create product as it already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+
+}
+
 func TestGetProduct(t *testing.T) {
 	ts.ClearTable("products")
 
@@ -26,10 +79,8 @@ func TestGetProduct(t *testing.T) {
 	ts.S.Database.Create(pd)
 
 	cases := []helpers.TestCase{
-		// Cannot get manufacturer with invalid ID
-		// Can get manufacturer
 		{
-			TestName: "Retrieve product by id",
+			TestName: "Can retrieve product by id",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, pd.ProductID),
@@ -37,19 +88,19 @@ func TestGetProduct(t *testing.T) {
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
-					fmt.Sprintf("product_id %v", pd.ProductID),
+					pd.ProductName,
+					fmt.Sprintf(`"product_id":%v`, pd.ProductID),
 				},
 			},
 		},
 		{
-			TestName: "404 Error: Failed to retrieve product by id",
+			TestName: "Cannot retrieve product by id",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 1000000),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Product with ID was not found",
 			},
 		},
 	}
@@ -58,60 +109,6 @@ func TestGetProduct(t *testing.T) {
 			ts.ExecuteTest(t, &testCase)
 		})
 	}
-}
-
-func TestPostProduct(t *testing.T) {
-	ts.ClearTable("products")
-
-	request := helpers.Request{
-		Method: http.MethodPost,
-		Url:    "/product/",
-	}
-
-	cases := []helpers.TestCase{
-		{
-			TestName: "Test 1 - Creating a Product",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: &model.Product{
-				ProductCode:    "Sony",
-				ProductName:    "Xbox Series Z",
-				ManufacturerID: 1,
-				Stock:          250,
-				Price:          400,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusCreated,
-				BodyPart:   "Product created successfully",
-			},
-		},
-		{
-			TestName: "Test 2 - Error 409: Product already exists!",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: &model.Product{
-				ProductCode:    "Sony",
-				ProductName:    "Xbox Series Z",
-				ManufacturerID: 1,
-				Stock:          250,
-				Price:          400,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusConflict,
-				BodyPart:   "Product already exists",
-			},
-		},
-	}
-	for _, testCase := range cases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			ts.ExecuteTest(t, &testCase)
-		})
-	}
-
 }
 
 func TestPutProduct(t *testing.T) {
@@ -133,7 +130,7 @@ func TestPutProduct(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Test 1 - Update Product by ID",
+			TestName: "Can update Product by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
@@ -147,18 +144,17 @@ func TestPutProduct(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Successfully updated product",
+				BodyParts:  []string{fmt.Sprintf(`"product_code":"CHZXMG45J"`)},
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to update product by ID",
+			TestName: "Cannot update product by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Could not find product by ID",
 			},
 		},
 	}
@@ -188,25 +184,27 @@ func TestDeleteProduct(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Test 1 - Delete product by ID",
+			TestName: "Can delete product by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Success: Product has been deleted",
+				BodyParts: []string{
+					product.ProductName,
+					fmt.Sprintf(`"product_id":%v`, product.ProductID),
+				},
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to find and delete product by ID",
+			TestName: "Cannot find and delete product by ID",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
-				Url:    "/product/1000",
+				Url:    "/product/1000000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Could not find product by that ID",
 			},
 		},
 	}

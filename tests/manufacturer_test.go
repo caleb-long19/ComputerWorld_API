@@ -8,16 +8,50 @@ import (
 	"testing"
 )
 
-// TODO: Add in some helpers to clear database tables
-/*
-	Change controllers to be like manufacturer one - Done
+func TestPostManufacturer(t *testing.T) {
+	ts.ClearTable("manufacturers")
 
-	Add in ability to clear tables for tests - Done
+	request := helpers.Request{
+		Method: http.MethodPost,
+		Url:    "/manufacturer/",
+	}
 
-	Create test data for all tests - Done
+	cases := []helpers.TestCase{
+		{
+			TestName: "Can create a manufacturer",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Manufacturer{
+				ManufacturerName: "Microsoft",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{`"manufacturer_name":"Microsoft"`},
+			},
+		},
+		{
+			TestName: "Cannot create manufacturer as they already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: model.Manufacturer{
+				ManufacturerName: "Microsoft",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
 
-	Run through coverage report and make sure you've covered as much as you can for each endpoint - Almost
-*/
+}
 
 func TestGetManufacturer(t *testing.T) {
 	ts.ClearTable("manufacturers")
@@ -33,10 +67,8 @@ func TestGetManufacturer(t *testing.T) {
 	ts.S.Database.Create(mf)
 
 	cases := []helpers.TestCase{
-		// Cannot get manufacturer with invalid ID - Done
-		// Can get manufacturer - Done
 		{
-			TestName: "Test 1 - Retrieve manufacturer by ID",
+			TestName: "Can retrieve manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
@@ -44,19 +76,19 @@ func TestGetManufacturer(t *testing.T) {
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
-					fmt.Sprintf("manufacturer_id %v", mf.ManufacturerID),
+					mf.ManufacturerName,
+					fmt.Sprintf(`"manufacturer_id":%v`, mf.ManufacturerID),
 				},
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to retrieve manufacturer by ID",
+			TestName: "Cannot retrieve manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 10000),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Could not find manufacturer by that ID",
 			},
 		},
 	}
@@ -65,52 +97,6 @@ func TestGetManufacturer(t *testing.T) {
 			ts.ExecuteTest(t, &testCase)
 		})
 	}
-}
-
-func TestPostManufacturer(t *testing.T) {
-	ts.ClearTable("manufacturers")
-
-	request := helpers.Request{
-		Method: http.MethodPost,
-		Url:    "/manufacturer/",
-	}
-
-	cases := []helpers.TestCase{
-		{
-			TestName: "Test 1 - Creating a Manufacturer",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: &model.Manufacturer{
-				ManufacturerName: "Sony",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusCreated,
-				BodyPart:   "Manufacturer created successfully",
-			},
-		},
-		{
-			TestName: "Test 2 - Error 409: Manufacturer already exists!",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: &model.Manufacturer{
-				ManufacturerName: "Sony",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusConflict,
-				BodyPart:   "Manufacturer already exists",
-			},
-		},
-	}
-	for _, testCase := range cases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			ts.ExecuteTest(t, &testCase)
-		})
-	}
-
 }
 
 func TestPutManufacturer(t *testing.T) {
@@ -128,7 +114,7 @@ func TestPutManufacturer(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Test 1 - Update Manufacturer by ID",
+			TestName: "Can update Manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
@@ -138,18 +124,17 @@ func TestPutManufacturer(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Manufacturer updated successfully",
+				BodyParts:  []string{fmt.Sprintf(`"manufacturer_name":"Akira"`)},
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to update manufacturer by ID",
+			TestName: "Cannot update manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Could not find manufacturer by that ID",
 			},
 		},
 	}
@@ -175,25 +160,27 @@ func TestDeleteManufacturer(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Test 1 - Delete manufacturer by ID",
+			TestName: "Can delete manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyPart:   "Success: Manufacturer has been deleted",
+				BodyParts: []string{
+					mf.ManufacturerName,
+					fmt.Sprintf(`"manufacturer_id":%v`, mf.ManufacturerID),
+				},
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to find and delete Manufacturer by ID",
+			TestName: "Cannot find and delete manufacturer by ID",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
-				Url:    "/manufacturer/1000",
+				Url:    "/manufacturer/10000000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Could not find manufacturer by that ID",
 			},
 		},
 	}

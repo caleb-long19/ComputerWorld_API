@@ -23,20 +23,20 @@ func ConfigureRoutes(server *server.Server) {
 	})
 
 	// Initialise Manufacturer CRUD
-	manufacturerRoute.GET("/:id", mfController.GetManufacturer)
-	manufacturerRoute.POST("/", mfController.PostManufacturer)
-	manufacturerRoute.PUT("/:id", mfController.PutManufacturer)
-	manufacturerRoute.DELETE("/:id", mfController.DeleteManufacturer)
+	manufacturerRoute.GET("/:id", mfController.Read)
+	manufacturerRoute.POST("/", mfController.Create)
+	manufacturerRoute.PUT("/:id", mfController.Update)
+	manufacturerRoute.DELETE("/:id", mfController.Delete)
 
 	// Initialise Product CRUD
-	productRoute.GET("/:id", pdController.GetProduct)
-	productRoute.POST("/", pdController.CreateProduct)
-	productRoute.PUT("/:id", pdController.PutProduct)
-	productRoute.DELETE("/:id", pdController.DeleteProduct)
+	productRoute.GET("/:id", pdController.Read)
+	productRoute.POST("/", pdController.Create)
+	productRoute.PUT("/:id", pdController.Update)
+	productRoute.DELETE("/:id", pdController.Delete)
 
 	// Initialise Stock CRUD
-	orderRoute.GET("/:id", odController.GetOrder)
-	orderRoute.POST("/", odController.CreateOrder)
-	orderRoute.PUT("/:id", odController.PutOrder)
-	orderRoute.DELETE("/:id", odController.DeleteOrder)
+	orderRoute.GET("/:id", odController.Read)
+	orderRoute.POST("/", odController.Create)
+	orderRoute.PUT("/:id", odController.Update)
+	orderRoute.DELETE("/:id", odController.Delete)
 }
