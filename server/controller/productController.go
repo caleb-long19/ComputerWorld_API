@@ -59,7 +59,7 @@ func (h *ProductController) GetProduct(c echo.Context) error {
 	var product model.Product
 
 	if res := h.Db.Where("product_id = ?", id).First(&product); res.Error != nil {
-		return c.String(http.StatusNotFound, id)
+		return c.String(http.StatusNotFound, "Error: Product with ID was not found")
 	}
 
 	response := map[string]interface{}{
