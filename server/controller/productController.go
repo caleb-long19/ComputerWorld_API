@@ -20,11 +20,7 @@ func (h *ProductController) CreateProduct(c echo.Context) error {
 	productData := new(model.Product)
 
 	if err := c.Bind(productData); err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusInternalServerError, "Error: Failed to bind product")
 	}
 
 	h.Db.Model(&model.Product{}).Association("Product")
@@ -38,18 +34,10 @@ func (h *ProductController) CreateProduct(c echo.Context) error {
 	}
 
 	if err := h.Db.Create(&newProduct).Error; err != nil {
-		data := map[string]interface{}{
-			"message": err.Error(),
-		}
-
-		return c.JSON(http.StatusInternalServerError, data)
+		return c.JSON(http.StatusConflict, "Product already exists")
 	}
 
-	response := map[string]interface{}{
-		"Product_Data": newProduct,
-	}
-
-	return c.JSON(http.StatusCreated, response)
+	return c.JSON(http.StatusCreated, "Product created successfully")
 }
 
 func (h *ProductController) GetProduct(c echo.Context) error {

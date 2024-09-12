@@ -16,7 +16,7 @@ import (
 
 	Create test data for all tests - Done
 
-	Run through coverage report and make sure you've covered as much as you can for each endpoint
+	Run through coverage report and make sure you've covered as much as you can for each endpoint - Almost
 */
 
 func TestGetManufacturer(t *testing.T) {
@@ -67,34 +67,51 @@ func TestGetManufacturer(t *testing.T) {
 	}
 }
 
-//func TestPostManufacturer(t *testing.T) {
-//	ts.ClearTable("manufacturers")
-//
-//	request := helpers.Request{
-//		Method: http.MethodPost,
-//		Url:    "/manufacturer",
-//	}
-//
-//	cases := []helpers.TestCase{
-//		{
-//			TestName: "Test 1 - Create Manufacturer",
-//			Request: helpers.Request{
-//				Method: request.Method,
-//				Url:    request.Url,
-//			},
-//			Expected: helpers.ExpectedResponse{
-//				StatusCode: http.StatusCreated,
-//				BodyPart:   "Manufacturer created successfully",
-//			},
-//		},
-//	}
-//	for _, testCase := range cases {
-//		t.Run(testCase.TestName, func(t *testing.T) {
-//			ts.ExecuteTest(t, &testCase)
-//		})
-//	}
-//
-//}
+func TestPostManufacturer(t *testing.T) {
+	ts.ClearTable("manufacturers")
+
+	request := helpers.Request{
+		Method: http.MethodPost,
+		Url:    "/manufacturer/",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Test 1 - Creating a Manufacturer",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: &model.Manufacturer{
+				ManufacturerName: "Sony",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyPart:   "Manufacturer created successfully",
+			},
+		},
+		{
+			TestName: "Test 2 - Error 409: Manufacturer already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: &model.Manufacturer{
+				ManufacturerName: "Sony",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+				BodyPart:   "Manufacturer already exists",
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+
+}
 
 func TestPutManufacturer(t *testing.T) {
 	ts.ClearTable("manufacturers")
