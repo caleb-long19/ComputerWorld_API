@@ -11,6 +11,7 @@ After cloning the repository. Open it up using GOLAND. Open the project and inse
 The Computer World - API currently uses two databases. One of them labled computer_world.db. This one is the primary (currently local) database that will be used. The other being computer_world_test.db, this is used in conjuction with the tests only and help find flaws in the code.
 
 ### TABLES
+![alt text](diagrams/CW_API_Diagram.png)
 
 ## TO-DO
 - More tests need to be implemented to discover the flaws in the code and prevent problems in the future.
