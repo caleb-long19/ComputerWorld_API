@@ -41,6 +41,17 @@ func TestGetProduct(t *testing.T) {
 				},
 			},
 		},
+		{
+			TestName: "404 Error: Failed to retrieve product by id",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, 1000000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+				BodyPart:   "Error: Product with ID was not found",
+			},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.TestName, func(t *testing.T) {

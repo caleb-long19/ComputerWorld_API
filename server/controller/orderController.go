@@ -42,12 +42,10 @@ func (h *OrderController) CreateOrder(c echo.Context) error {
 
 func (h *OrderController) GetOrder(c echo.Context) error {
 
-	id := c.Param("id")
-
 	var order model.Order
 
-	if res := h.Db.Where("order_id = ?", id).First(&order); res.Error != nil {
-		return c.String(http.StatusNotFound, id)
+	if res := h.Db.Where("order_id = ?", c.Param("id")).First(&order); res.Error != nil {
+		return c.String(http.StatusNotFound, "Error: Order with ID was not found")
 	}
 
 	response := map[string]interface{}{
