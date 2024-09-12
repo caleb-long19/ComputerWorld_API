@@ -1,7 +1,7 @@
 package server
 
 import (
-	"ComputerWorld_API/database"
+	"ComputerWorld_API/db"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -14,7 +14,7 @@ type Server struct {
 func NewServer() *Server {
 	s := &Server{
 		Echo:     echo.New(),
-		Database: database.DatabaseConnection(),
+		Database: db.DatabaseConnection(),
 	}
 
 	return s

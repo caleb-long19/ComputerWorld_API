@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"ComputerWorld_API/database/model"
+	"ComputerWorld_API/db/model"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 	"net/http"
