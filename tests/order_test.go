@@ -59,34 +59,40 @@ func TestGetOrder(t *testing.T) {
 	}
 }
 
-//func TestPostOrder(t *testing.T) {
-//	ts.ClearTable("orders")
-//
-//	request := helpers.Request{
-//		Method: http.MethodPost,
-//		Url:    "/order",
-//	}
-//
-//	cases := []helpers.TestCase{
-//		{
-//			TestName: "Test 1 - Create Order",
-//			Request: helpers.Request{
-//				Method: request.Method,
-//				Url:    request.Url,
-//			},
-//			Expected: helpers.ExpectedResponse{
-//				StatusCode: http.StatusCreated,
-//				BodyPart:   "Order created successfully",
-//			},
-//		},
-//	}
-//	for _, testCase := range cases {
-//		t.Run(testCase.TestName, func(t *testing.T) {
-//			ts.ExecuteTest(t, &testCase)
-//		})
-//	}
-//
-//}
+func TestPostOrder(t *testing.T) {
+	ts.ClearTable("orders")
+
+	request := helpers.Request{
+		Method: http.MethodPost,
+		Url:    "/order/",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Test 1 - Creating an Order",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: &model.Order{
+				OrderRef:     "SGWTDF",
+				OrderAmount:  3,
+				ProductID:    2,
+				ProductPrice: 700,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyPart:   "Order created successfully",
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+
+}
 
 func TestPutOrder(t *testing.T) {
 	ts.ClearTable("orders")

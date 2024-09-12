@@ -60,34 +60,59 @@ func TestGetProduct(t *testing.T) {
 	}
 }
 
-//func TestPostProduct(t *testing.T) {
-//	ts.ClearTable("products")
-//
-//	request := helpers.Request{
-//		Method: http.MethodPost,
-//		Url:    "/product",
-//	}
-//
-//	cases := []helpers.TestCase{
-//		{
-//			TestName: "Test 1 - Create Product",
-//			Request: helpers.Request{
-//				Method: request.Method,
-//				Url:    request.Url,
-//			},
-//			Expected: helpers.ExpectedResponse{
-//				StatusCode: http.StatusCreated,
-//				BodyPart:   "Product created successfully",
-//			},
-//		},
-//	}
-//	for _, testCase := range cases {
-//		t.Run(testCase.TestName, func(t *testing.T) {
-//			ts.ExecuteTest(t, &testCase)
-//		})
-//	}
-//
-//}
+func TestPostProduct(t *testing.T) {
+	ts.ClearTable("products")
+
+	request := helpers.Request{
+		Method: http.MethodPost,
+		Url:    "/product/",
+	}
+
+	cases := []helpers.TestCase{
+		{
+			TestName: "Test 1 - Creating a Product",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: &model.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyPart:   "Product created successfully",
+			},
+		},
+		{
+			TestName: "Test 2 - Error 409: Product already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: &model.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+				BodyPart:   "Product already exists",
+			},
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			ts.ExecuteTest(t, &testCase)
+		})
+	}
+
+}
 
 func TestPutProduct(t *testing.T) {
 	ts.ClearTable("products")

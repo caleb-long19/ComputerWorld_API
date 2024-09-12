@@ -20,7 +20,7 @@ func (h *OrderController) CreateOrder(c echo.Context) error {
 	order := new(model.Order)
 
 	if err := c.Bind(order); err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	var priceValue = model.Product{ProductID: order.ProductID}
@@ -34,10 +34,10 @@ func (h *OrderController) CreateOrder(c echo.Context) error {
 	}
 
 	if err := h.Db.Create(&newOrder).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, "Error when creating order")
 	}
 
-	return c.JSON(http.StatusCreated, fmt.Sprintf("order_id %v", order.OrderID))
+	return c.JSON(http.StatusCreated, "Order created successfully")
 }
 
 func (h *OrderController) GetOrder(c echo.Context) error {

@@ -18,7 +18,7 @@ func NewManufacturerController(db *gorm.DB) *ManufacturerController {
 }
 
 func (h *ManufacturerController) PostManufacturer(c echo.Context) error {
-	log.Println(">>>> HERE ")
+	log.Println(">>>> MANUFACTURER POST ")
 
 	manufacturerData := new(model.Manufacturer)
 
@@ -31,7 +31,7 @@ func (h *ManufacturerController) PostManufacturer(c echo.Context) error {
 	}
 
 	if err := h.Db.Create(&newManufacturer).Error; err != nil {
-		return c.String(http.StatusOK, "Failed to create manufacturer")
+		return c.String(http.StatusConflict, "Manufacturer already exists")
 	}
 
 	return c.JSON(http.StatusCreated, "Manufacturer created successfully")
