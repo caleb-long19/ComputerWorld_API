@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"ComputerWorld_API/database"
+	"ComputerWorld_API/db"
 	"ComputerWorld_API/server"
 	"ComputerWorld_API/server/routes"
 	"github.com/labstack/echo/v4"
@@ -15,7 +15,7 @@ func NewTestServer() *TestServer {
 	ts := &TestServer{
 		S: &server.Server{
 			Echo:     echo.New(),
-			Database: database.DatabaseConnection(),
+			Database: db.DatabaseConnection(),
 		},
 	}
 

@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"ComputerWorld_API/database/model"
+	"ComputerWorld_API/db/model"
 	"ComputerWorld_API/tests/helpers"
 	"fmt"
 	"net/http"
