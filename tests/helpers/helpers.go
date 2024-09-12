@@ -110,14 +110,17 @@ func (ts *TestServer) ValidateResults(t *testing.T, test *TestCase, res *httptes
 }
 
 func (ts *TestServer) ClearTable(tableName string) {
-	err := ts.S.Database.Exec(fmt.Sprintf("DELETE FROM %v", tableName)).Error
+	// Resetting the auto-increment counter involves deleting all rows
+	err := ts.S.Database.Exec(fmt.Sprintf("DELETE FROM %s", tableName)).Error
 	if err != nil {
-		log.Fatalf("You can't clear that table. Err: %v", err)
+		log.Fatalf("Error deleting rows: %v", err)
 	}
 
-	// TODO: CAUSING SOME PROBLEMS WITH SQLITE - NOT NEEDED AT THE MOMENT
-	//err = ts.S.Database.Exec(fmt.Sprintf("ALTER TABLE %v AUTO_INCREMENT = 1", tableName)).Error
-	//if err != nil {
-	//	log.Fatalf("Error setting autoincrement. Err: %v", err)
-	//}
+	// Step 2: Reset the auto-increment counter by deleting from sqlite_sequence
+	errTwo := ts.S.Database.Exec(fmt.Sprintf("DELETE FROM sqlite_sequence WHERE name='%s'", tableName)).Error
+	if errTwo != nil {
+		log.Fatalf("Error resetting sqlite_sequence: %v", errTwo)
+	}
+
+	log.Println("Auto-increment reset successfully.")
 }
