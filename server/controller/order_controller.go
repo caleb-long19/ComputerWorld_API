@@ -6,7 +6,6 @@ import (
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
 	"errors"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -98,7 +97,6 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 
 	order := new(models.Order)
 	if request.OrderReference == "" {
-		fmt.Printf("Order Reference:", request.OrderReference)
 		return nil, errors.New("error: Invalid order reference")
 	}
 	if request.OrderAmount == 0 {

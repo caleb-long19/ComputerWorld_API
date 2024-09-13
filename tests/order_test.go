@@ -34,6 +34,71 @@ func TestPostOrder(t *testing.T) {
 				BodyParts:  []string{`"order_ref":"SGWTDF"`},
 			},
 		},
+		{
+			TestName: "Cannot create an order as no Order Reference was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "",
+				OrderAmount: 3,
+				ProductID:   2,
+				OrderPrice:  700,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create an order as no Order Amount was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "SGWTDF",
+				OrderAmount: 0,
+				ProductID:   2,
+				OrderPrice:  700,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create an order as no ProductID was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "SGWTDF",
+				OrderAmount: 3,
+				ProductID:   0,
+				OrderPrice:  700,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			//TODO: The price should be setup automatically, this test will become obsolete, only using it for now!
+			TestName: "Cannot create an order as no Order Price was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "SGWTDF",
+				OrderAmount: 3,
+				ProductID:   2,
+				OrderPrice:  0,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.TestName, func(t *testing.T) {
@@ -72,6 +137,16 @@ func TestGetOrder(t *testing.T) {
 					order.OrderRef,
 					fmt.Sprintf(`"order_id":%v`, order.OrderID),
 				},
+			},
+		},
+		{
+			TestName: "Can retrieve order by ID as a string was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
 			},
 		},
 		{
@@ -162,7 +237,7 @@ func TestDeleteOrder(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Test 1 - Delete order by ID",
+			TestName: "Can delete order by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
@@ -172,13 +247,23 @@ func TestDeleteOrder(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Test 2 - Error 404: Fail to find and delete order by ID",
+			TestName: "Cannot find and delete order by ID",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
 				Url:    "/order/1000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
+			},
+		},
+		{
+			TestName: "Cannot delete order as no ID was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    "/order/",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusMethodNotAllowed,
 			},
 		},
 	}

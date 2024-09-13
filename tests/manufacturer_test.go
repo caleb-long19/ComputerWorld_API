@@ -44,6 +44,30 @@ func TestPostManufacturer(t *testing.T) {
 				StatusCode: http.StatusConflict,
 			},
 		},
+		{
+			TestName: "Cannot create manufacturer as no name was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Manufacturer{},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create manufacturer when an ID is given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerID: 1,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.TestName, func(t *testing.T) {
@@ -89,6 +113,16 @@ func TestGetManufacturer(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
+			},
+		},
+		{
+			TestName: "Can retrieve manufacturer by ID as a string was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
 			},
 		},
 	}
@@ -177,6 +211,16 @@ func TestDeleteManufacturer(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
+			},
+		},
+		{
+			TestName: "Cannot delete manufacturer as no ID was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    "/manufacturer/",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusMethodNotAllowed,
 			},
 		},
 	}

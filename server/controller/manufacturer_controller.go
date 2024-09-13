@@ -45,7 +45,7 @@ func (mc *ManufacturerController) Get(c echo.Context) error {
 func (mc *ManufacturerController) GetAll(c echo.Context) error {
 	manufacturers, err := mc.ManufacturerRepository.GetAll()
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusInternalServerError, err)
+		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, manufacturers)
 }

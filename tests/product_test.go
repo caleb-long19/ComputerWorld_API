@@ -24,15 +24,33 @@ func TestPostProduct(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Product{
-				ProductCode:    "Sony",
-				ProductName:    "Xbox Series Z",
+				ProductCode:    "FSDFS3",
+				ProductName:    "Xbox Series P",
 				ManufacturerID: 1,
 				Stock:          250,
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
-				BodyParts:  []string{`"product_name":"Xbox Series Z"`},
+				BodyParts:  []string{`"product_name":"Xbox Series P"`},
+			},
+		},
+		{
+			TestName: "Can create product when stock is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "23SDFSF",
+				ProductName:    "Xbox Super Cool",
+				ManufacturerID: 1,
+				Stock:          0,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{`"product_name":"Xbox Super Cool"`},
 			},
 		},
 		{
@@ -42,14 +60,82 @@ func TestPostProduct(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Product{
-				ProductCode:    "Sony",
-				ProductName:    "Xbox Series Z",
+				ProductCode:    "FSDFS3",
+				ProductName:    "Xbox Series P",
 				ManufacturerID: 1,
 				Stock:          250,
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot create product as product code is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "",
+				ProductName:    "Xbox Series V",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as product name is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "DSFV3S",
+				ProductName:    "",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as manufacturer id is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 0,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as Price is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          0,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 	}
@@ -91,6 +177,16 @@ func TestGetProduct(t *testing.T) {
 					pd.ProductName,
 					fmt.Sprintf(`"product_id":%v`, pd.ProductID),
 				},
+			},
+		},
+		{
+			TestName: "Can retrieve product by ID as a string was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
 			},
 		},
 		{
