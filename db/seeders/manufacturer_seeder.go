@@ -1,13 +1,13 @@
-package seed
+package seeders
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"log"
 )
 
 func (s *Seeding) CreateManufacturer() {
 
-	manufacturers := []model.Manufacturer{
+	manufacturers := []models.Manufacturer{
 		{
 			ManufacturerID:   1,
 			ManufacturerName: "Microsoft",

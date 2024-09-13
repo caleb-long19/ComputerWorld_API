@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/tests/helpers"
 	"fmt"
 	"net/http"
@@ -23,7 +23,7 @@ func TestPostOrder(t *testing.T) {
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: model.Order{
+			RequestBody: models.Order{
 				OrderRef:    "SGWTDF",
 				OrderAmount: 3,
 				ProductID:   2,
@@ -51,7 +51,7 @@ func TestGetOrder(t *testing.T) {
 		Url:    "/order",
 	}
 
-	order := &model.Order{
+	order := &models.Order{
 		OrderRef:    "3GNGKF",
 		OrderAmount: 2,
 		ProductID:   2,
@@ -100,7 +100,7 @@ func TestPutOrder(t *testing.T) {
 		Url:    "/order",
 	}
 
-	order := &model.Order{
+	order := &models.Order{
 		OrderRef:    "TESTREF",
 		OrderAmount: 10,
 		ProductID:   2,
@@ -115,7 +115,7 @@ func TestPutOrder(t *testing.T) {
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
 			},
-			RequestBody: model.Order{
+			RequestBody: models.Order{
 				OrderRef:    "VBJC53",
 				OrderAmount: 5,
 				ProductID:   1,
@@ -152,7 +152,7 @@ func TestDeleteOrder(t *testing.T) {
 		Url:    "/order",
 	}
 
-	order := &model.Order{
+	order := &models.Order{
 		OrderRef:    "TESTREF",
 		OrderAmount: 15,
 		ProductID:   1,

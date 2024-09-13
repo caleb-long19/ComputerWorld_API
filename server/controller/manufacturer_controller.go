@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
@@ -42,6 +42,14 @@ func (mc *ManufacturerController) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, manufacturer)
 }
 
+func (mc *ManufacturerController) GetAll(c echo.Context) error {
+	manufacturers, err := mc.ManufacturerRepository.GetAll()
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, manufacturers)
+}
+
 func (mc *ManufacturerController) Update(c echo.Context) error {
 	existingManufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
 	if err != nil {
@@ -62,7 +70,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	existingManufacturer = &model.Manufacturer{
+	existingManufacturer = &models.Manufacturer{
 		ManufacturerID:   existingManufacturer.ManufacturerID,
 		ManufacturerName: updateManufacturer.ManufacturerName,
 	}
@@ -84,12 +92,12 @@ func (mc *ManufacturerController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
 }
 
-func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*model.Manufacturer, error) {
+func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
 
-	manufacturer := new(model.Manufacturer)
+	manufacturer := new(models.Manufacturer)
 	if request.ManufacturerName == "" {
 		return nil, errors.New("error: Invalid manufacturer name")
 	}
