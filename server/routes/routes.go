@@ -27,10 +27,10 @@ func ConfigureRoutes(server *server.Server) {
 	})
 
 	// Initialise Manufacturer CRUD
-	//	manufacturerRoute.GET("/:id", mfController.Read)
+	manufacturerRoute.GET("/:id", mfController.Get)
 	manufacturerRoute.POST("/", mfController.Create)
-	// manufacturerRoute.PUT("/:id", mfController.Update)
-	// manufacturerRoute.DELETE("/:id", mfController.Delete)
+	manufacturerRoute.PUT("/:id", mfController.Update)
+	manufacturerRoute.DELETE("/:id", mfController.Delete)
 
 	// Initialise Product CRUD
 	// productRoute.GET("/:id", pdController.Read)
