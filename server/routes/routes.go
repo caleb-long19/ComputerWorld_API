@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server"
 	"ComputerWorld_API/server/controller"
 	"github.com/labstack/echo/v4"
@@ -9,9 +10,12 @@ import (
 
 func ConfigureRoutes(server *server.Server) {
 	// Create controllers
-	mfController := controller.NewManufacturerController(server.Database)
-	pdController := controller.NewProductController(server.Database)
-	odController := controller.NewOrderController(server.Database)
+	mfRepo := repositories.NewManufacturerRepository(server.Database)
+	productRepo := repositories.NewProductRepository(server.Database)
+	orderRepo := repositories.NewOrderRepository(server.Database)
+	mfController := controller.ManufacturerController{ManufacturerRepository: mfRepo}
+	pdController := controller.ProductController{ProductRepository: productRepo}
+	odController := controller.OrderController{OrderRepository: orderRepo}
 
 	manufacturerRoute := server.Echo.Group("/manufacturer")
 	productRoute := server.Echo.Group("/product")
@@ -23,20 +27,20 @@ func ConfigureRoutes(server *server.Server) {
 	})
 
 	// Initialise Manufacturer CRUD
-	manufacturerRoute.GET("/:id", mfController.Read)
+	//	manufacturerRoute.GET("/:id", mfController.Read)
 	manufacturerRoute.POST("/", mfController.Create)
-	manufacturerRoute.PUT("/:id", mfController.Update)
-	manufacturerRoute.DELETE("/:id", mfController.Delete)
+	// manufacturerRoute.PUT("/:id", mfController.Update)
+	// manufacturerRoute.DELETE("/:id", mfController.Delete)
 
 	// Initialise Product CRUD
-	productRoute.GET("/:id", pdController.Read)
+	// productRoute.GET("/:id", pdController.Read)
 	productRoute.POST("/", pdController.Create)
-	productRoute.PUT("/:id", pdController.Update)
-	productRoute.DELETE("/:id", pdController.Delete)
+	// productRoute.PUT("/:id", pdController.Update)
+	// productRoute.DELETE("/:id", pdController.Delete)
 
 	// Initialise Stock CRUD
-	orderRoute.GET("/:id", odController.Read)
+	// orderRoute.GET("/:id", odController.Read)
 	orderRoute.POST("/", odController.Create)
-	orderRoute.PUT("/:id", odController.Update)
-	orderRoute.DELETE("/:id", odController.Delete)
+	// orderRoute.PUT("/:id", odController.Update)
+	// orderRoute.DELETE("/:id", odController.Delete)
 }

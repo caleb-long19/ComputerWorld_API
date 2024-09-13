@@ -1,8 +1,8 @@
 package requests
 
 type OrderRequest struct {
-	OrderReference string  `json:"order_reference"`
+	OrderReference string  `json:"order_ref"`
 	OrderAmount    int     `json:"order_amount"`
 	ProductID      int     `json:"product_id"`
-	ProductPrice   float64 `json:"product_price"`
+	OrderPrice     float64 `json:"order_price"`
 }

@@ -10,7 +10,7 @@ func (s *Seeding) CreateManufacturer() {
 	manufacturers := []model.Manufacturer{
 		{
 			ManufacturerID:   1,
-			ManufacturerName: "Valve",
+			ManufacturerName: "Microsoft",
 		},
 		{
 			ManufacturerID:   2,

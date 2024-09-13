@@ -19,7 +19,6 @@ func TestMain(m *testing.M) {
 
 	// Create the test server
 	ts = helpers.NewTestServer()
-
 	status := m.Run()
 	os.Exit(status)
 }

@@ -9,25 +9,25 @@ func (s *Seeding) CreateOrder() {
 
 	orders := []model.Order{
 		{
-			OrderID:      1,
-			OrderAmount:  5,
-			OrderRef:     "JOLANDO4",
-			ProductID:    1,
-			ProductPrice: 500,
+			OrderID:     1,
+			OrderAmount: 5,
+			OrderRef:    "JOLANDO4",
+			ProductID:   1,
+			OrderPrice:  500,
 		},
 		{
-			OrderID:      2,
-			OrderAmount:  5,
-			OrderRef:     "DH4OJ4",
-			ProductID:    1,
-			ProductPrice: 1750,
+			OrderID:     2,
+			OrderAmount: 5,
+			OrderRef:    "DH4OJ4",
+			ProductID:   1,
+			OrderPrice:  1750,
 		},
 		{
-			OrderID:      3,
-			OrderAmount:  5,
-			OrderRef:     "KAUFMAN8",
-			ProductID:    1,
-			ProductPrice: 1250,
+			OrderID:     3,
+			OrderAmount: 5,
+			OrderRef:    "KAUFMAN8",
+			ProductID:   1,
+			OrderPrice:  1250,
 		},
 	}
 

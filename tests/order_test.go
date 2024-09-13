@@ -24,10 +24,10 @@ func TestPostOrder(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: model.Order{
-				OrderRef:     "SGWTDF",
-				OrderAmount:  3,
-				ProductID:    2,
-				ProductPrice: 700,
+				OrderRef:    "SGWTDF",
+				OrderAmount: 3,
+				ProductID:   2,
+				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
@@ -52,10 +52,10 @@ func TestGetOrder(t *testing.T) {
 	}
 
 	order := &model.Order{
-		OrderRef:     "3GNGKF",
-		OrderAmount:  2,
-		ProductID:    2,
-		ProductPrice: 700,
+		OrderRef:    "3GNGKF",
+		OrderAmount: 2,
+		ProductID:   2,
+		OrderPrice:  700,
 	}
 	ts.S.Database.Create(order)
 
@@ -102,10 +102,10 @@ func TestPutOrder(t *testing.T) {
 	}
 
 	order := &model.Order{
-		OrderRef:     "TESTREF",
-		OrderAmount:  10,
-		ProductID:    2,
-		ProductPrice: 350,
+		OrderRef:    "TESTREF",
+		OrderAmount: 10,
+		ProductID:   2,
+		OrderPrice:  350,
 	}
 	ts.S.Database.Create(order)
 
@@ -117,10 +117,10 @@ func TestPutOrder(t *testing.T) {
 				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
 			},
 			RequestBody: model.Order{
-				OrderRef:     "VBJC53",
-				OrderAmount:  5,
-				ProductID:    1,
-				ProductPrice: 700,
+				OrderRef:    "VBJC53",
+				OrderAmount: 5,
+				ProductID:   1,
+				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
@@ -154,10 +154,10 @@ func TestDeleteOrder(t *testing.T) {
 	}
 
 	order := &model.Order{
-		OrderRef:     "TESTREF",
-		OrderAmount:  15,
-		ProductID:    1,
-		ProductPrice: 1200,
+		OrderRef:    "TESTREF",
+		OrderAmount: 15,
+		ProductID:   1,
+		OrderPrice:  1200,
 	}
 	ts.S.Database.Create(order)
 
