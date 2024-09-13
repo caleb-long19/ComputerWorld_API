@@ -167,10 +167,6 @@ func TestDeleteManufacturer(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyParts: []string{
-					mf.ManufacturerName,
-					fmt.Sprintf(`"manufacturer_id":%v`, mf.ManufacturerID),
-				},
 			},
 		},
 		{

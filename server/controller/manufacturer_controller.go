@@ -14,18 +14,18 @@ type ManufacturerController struct {
 	ManufacturerRepository repositories.ManufacturerInterface
 }
 
-func (hc *ManufacturerController) Create(c echo.Context) error {
+func (mc *ManufacturerController) Create(c echo.Context) error {
 	requestManufacturer := new(requests.ManufacturerRequest)
 
 	if err := c.Bind(&requestManufacturer); err != nil {
 		return c.JSON(http.StatusBadRequest, requestManufacturer)
 	}
-	manufacturer, err := hc.validateManufacturerRequest(requestManufacturer)
+	manufacturer, err := mc.validateManufacturerRequest(requestManufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	err = hc.ManufacturerRepository.Create(manufacturer)
+	err = mc.ManufacturerRepository.Create(manufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusConflict, err)
 	}
@@ -33,52 +33,58 @@ func (hc *ManufacturerController) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, manufacturer)
 }
 
-//func (hc *ManufacturerController) Get(c echo.Context) error {
-//	requestManufacturer := new(requests.ManufacturerRequest)
-//	if res := hc.ManufacturerRepository.DB.Where("manufacturer_id = ?", c.Param("id")).First(&requestManufacturer); res.Error != nil {
-//		return c.JSON(http.StatusNotFound, requestManufacturer)
-//	}
-//
-//	return c.JSON(http.StatusOK, requestManufacturer)
-//}
+func (mc *ManufacturerController) Get(c echo.Context) error {
+	manufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
 
-//func (hc *ManufacturerController) Update(c echo.Context) error {
-//
-//	requestManufacturer := new(requests.ManufacturerRequest)
-//	if err := c.Bind(requestManufacturer); err != nil {
-//		return c.JSON(http.StatusBadRequest, "Error: Could not bind manufacturer data")
-//	}
-//
-//	existingManufacturer := new(requests.ManufacturerRequest)
-//	if err := hc.Db.Where("manufacturer_id = ?", c.Param("id")).First(&existingManufacturer).Error; err != nil {
-//		return c.JSON(http.StatusNotFound, existingManufacturer)
-//	}
-//
-//	existingManufacturer.ManufacturerName = requestManufacturer.ManufacturerName
-//	if err := hc.Db.Save(&existingManufacturer).Error; err != nil {
-//		return c.JSON(http.StatusBadRequest, existingManufacturer)
-//	}
-//
-//	return c.JSON(http.StatusOK, existingManufacturer)
-//}
+	return c.JSON(http.StatusOK, manufacturer)
+}
 
-//func (hc *ManufacturerController) Delete(c echo.Context) error {
-//	requestManufacturer := new(requests.ManufacturerRequest)
-//
-//	result := hc.Db.Where("manufacturer_id = ?", c.Param("id")).First(&requestManufacturer)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusNotFound, requestManufacturer)
-//	}
-//
-//	result = hc.Db.Delete(&requestManufacturer)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusBadRequest, requestManufacturer)
-//	}
-//
-//	return c.JSON(http.StatusOK, requestManufacturer)
-//}
+func (mc *ManufacturerController) Update(c echo.Context) error {
+	existingManufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
 
-func (hc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*model.Manufacturer, error) {
+	updateManufacturer := new(requests.ManufacturerRequest)
+	if err := c.Bind(&updateManufacturer); err != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	if updateManufacturer == nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer is required"))
+	}
+
+	_, err = mc.validateManufacturerRequest(updateManufacturer)
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	existingManufacturer = &model.Manufacturer{
+		ManufacturerID:   existingManufacturer.ManufacturerID,
+		ManufacturerName: updateManufacturer.ManufacturerName,
+	}
+
+	err = mc.ManufacturerRepository.Update(existingManufacturer)
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusConflict, err)
+	}
+
+	return c.JSON(http.StatusOK, existingManufacturer)
+}
+
+func (mc *ManufacturerController) Delete(c echo.Context) error {
+	err := mc.ManufacturerRepository.Delete(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
+}
+
+func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*model.Manufacturer, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
