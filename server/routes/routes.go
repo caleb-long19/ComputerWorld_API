@@ -33,14 +33,14 @@ func ConfigureRoutes(server *server.Server) {
 	manufacturerRoute.DELETE("/:id", mfController.Delete)
 
 	// Initialise Product CRUD
-	// productRoute.GET("/:id", pdController.Read)
+	productRoute.GET("/:id", pdController.Get)
 	productRoute.POST("/", pdController.Create)
-	// productRoute.PUT("/:id", pdController.Update)
-	// productRoute.DELETE("/:id", pdController.Delete)
+	productRoute.PUT("/:id", pdController.Update)
+	productRoute.DELETE("/:id", pdController.Delete)
 
-	// Initialise Stock CRUD
-	// orderRoute.GET("/:id", odController.Read)
+	// Initialise Order CRUD
+	orderRoute.GET("/:id", odController.Get)
 	orderRoute.POST("/", odController.Create)
-	// orderRoute.PUT("/:id", odController.Update)
-	// orderRoute.DELETE("/:id", odController.Delete)
+	orderRoute.PUT("/:id", odController.Update)
+	orderRoute.DELETE("/:id", odController.Delete)
 }
