@@ -112,7 +112,7 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	if request.ProductStock < 0 {
 		return nil, errors.New("error: Invalid stock amount")
 	}
-	if request.ProductPrice < 0.0 {
+	if request.ProductPrice <= 0.0 {
 		return nil, errors.New("error: Invalid product price")
 	}
 
