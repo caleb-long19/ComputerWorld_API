@@ -6,6 +6,6 @@ type Product struct {
 	ProductName    string `gorm:"unique" json:"product_name"`
 	ManufacturerID int    `json:"manufacturer_id"`
 	Manufacturer   Manufacturer
-	Stock          int     `json:"stock"`
-	Price          float64 `gorm:"not null" json:"price"`
+	Stock          int     `json:"product_stock"`
+	Price          float64 `gorm:"not null" json:"product_price"`
 }
