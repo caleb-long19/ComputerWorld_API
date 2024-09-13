@@ -33,53 +33,58 @@ func (pc *ProductController) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, product)
 }
 
-//func (h *ProductRepository) Read(c echo.Context) error {
-//
-//	var product model.Product
-//	if res := h.Db.Where("product_id = ?", c.Param("id")).First(&product); res.Error != nil {
-//		return c.String(http.StatusNotFound, "Error: Product with ID was not found")
-//	}
-//
-//	return c.JSON(http.StatusOK, product)
-//}
-//
-//func (h *ProductRepository) Update(c echo.Context) error {
-//	product := new(model.Product)
-//	if err := c.Bind(product); err != nil {
-//		return c.JSON(http.StatusBadRequest, "Error: Could not bind product")
-//	}
-//
-//	existingProduct := new(model.Product)
-//	if err := h.Db.Where("product_id = ?", c.Param("id")).First(&existingProduct).Error; err != nil {
-//		return c.JSON(http.StatusNotFound, existingProduct)
-//	}
-//
-//	existingProduct.ProductCode = product.ProductCode
-//	existingProduct.ProductName = product.ProductName
-//	existingProduct.ManufacturerID = product.ManufacturerID
-//	existingProduct.Stock = product.Stock
-//	existingProduct.Price = product.Price
-//	if err := h.Db.Save(&existingProduct).Error; err != nil {
-//		return c.JSON(http.StatusBadRequest, existingProduct)
-//	}
-//
-//	return c.JSON(http.StatusOK, existingProduct)
-//}
-//
-//func (h *ProductRepository) Delete(c echo.Context) error {
-//	var product model.Product
-//	result := h.Db.Where("product_id = ?", c.Param("id")).First(&product)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusNotFound, product)
-//	}
-//
-//	result = h.Db.Delete(&product)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusBadRequest, product)
-//	}
-//
-//	return c.JSON(http.StatusOK, product)
-//}
+func (pc *ProductController) Get(c echo.Context) error {
+	product, err := pc.ProductRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, product)
+}
+
+func (pc *ProductController) Update(c echo.Context) error {
+	existingProduct, err := pc.ProductRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	var updateProduct = new(requests.ProductRequest)
+	if err := c.Bind(updateProduct); err != nil {
+		return c.JSON(http.StatusBadRequest, "Error: Could not bind product")
+	}
+
+	if updateProduct == nil {
+		return c.JSON(http.StatusBadRequest, updateProduct)
+	}
+
+	_, err = pc.validateProductRequest(updateProduct)
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	existingProduct = &model.Product{
+		ProductID:   existingProduct.ProductID,
+		ProductName: updateProduct.ProductName,
+		ProductCode: updateProduct.ProductCode,
+		Stock:       updateProduct.ProductStock,
+		Price:       updateProduct.ProductPrice,
+	}
+
+	if err := pc.ProductRepository.Update(existingProduct); err != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, existingProduct)
+}
+
+func (pc *ProductController) Delete(c echo.Context) error {
+	err := pc.ProductRepository.Delete(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, "Product successfully deleted")
+}
 
 func (pc *ProductController) validateProductRequest(request *requests.ProductRequest) (*model.Product, error) {
 	if request == nil {

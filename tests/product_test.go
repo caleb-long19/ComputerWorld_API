@@ -191,10 +191,6 @@ func TestDeleteProduct(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyParts: []string{
-					product.ProductName,
-					fmt.Sprintf(`"product_id":%v`, product.ProductID),
-				},
 			},
 		},
 		{

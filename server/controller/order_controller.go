@@ -34,53 +34,54 @@ func (oc *OrderController) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, order)
 }
 
-//func (oc *OrderController) Read(c echo.Context) error {
-//	var order model.Order
-//
-//	if res := oc.Db.Where("order_id = ?", c.Param("id")).First(&order); res.Error != nil {
-//		return c.String(http.StatusNotFound, "Error: Order with ID was not found")
-//	}
-//
-//	return c.JSON(http.StatusOK, order)
-//}
-//
-//func (oc *OrderController) Update(c echo.Context) error {
-//	order := new(model.Order)
-//	if err := c.Bind(order); err != nil {
-//		return c.JSON(http.StatusBadRequest, "Error: Could not bind order")
-//	}
-//
-//	existingOrder := new(model.Order)
-//	if err := oc.Db.Where("order_id = ?", c.Param("id")).First(&existingOrder).Error; err != nil {
-//		return c.JSON(http.StatusNotFound, existingOrder.OrderID)
-//	}
-//
-//	existingOrder.OrderRef = order.OrderRef
-//	existingOrder.OrderAmount = order.OrderAmount
-//	existingOrder.ProductID = order.ProductID
-//	existingOrder.OrderPrice = order.OrderPrice * float64(order.OrderAmount)
-//	if err := oc.Db.Save(&existingOrder).Error; err != nil {
-//		return c.JSON(http.StatusBadRequest, "Error: Could not save order")
-//	}
-//
-//	return c.JSON(http.StatusOK, existingOrder)
-//}
-//
-//func (oc *OrderController) Delete(c echo.Context) error {
-//	var order model.Order
-//
-//	result := oc.Db.Where("order_id = ?", c.Param("id")).First(&order)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusNotFound, order)
-//	}
-//
-//	result = oc.Db.Delete(&order)
-//	if result.Error != nil {
-//		return c.JSON(http.StatusBadRequest, order)
-//	}
-//
-//	return c.JSON(http.StatusOK, order)
-//}
+func (oc *OrderController) Get(c echo.Context) error {
+	order, err := oc.OrderRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, order)
+}
+
+func (oc *OrderController) Update(c echo.Context) error {
+	existingOrder, err := oc.OrderRepository.Get(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	updateOrder := new(requests.OrderRequest)
+	if err := c.Bind(&updateOrder); err != nil {
+		return c.JSON(http.StatusBadRequest, updateOrder)
+	}
+
+	if updateOrder == nil {
+		return c.JSON(http.StatusBadRequest, updateOrder)
+	}
+
+	existingOrder = &model.Order{
+		OrderID:     existingOrder.OrderID,
+		OrderRef:    updateOrder.OrderReference,
+		OrderAmount: updateOrder.OrderAmount,
+		ProductID:   updateOrder.ProductID,
+		OrderPrice:  updateOrder.OrderPrice,
+	}
+
+	if err := oc.OrderRepository.Update(existingOrder); err != nil {
+		return reponses.ErrorResponse(c, http.StatusConflict, err)
+	}
+
+	return c.JSON(http.StatusOK, existingOrder)
+
+}
+
+func (oc *OrderController) Delete(c echo.Context) error {
+	err := oc.OrderRepository.Delete(c.Param("id"))
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, "Order successfully deleted")
+}
 
 func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) (*model.Order, error) {
 	if request == nil {

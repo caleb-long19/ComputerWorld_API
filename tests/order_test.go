@@ -82,7 +82,6 @@ func TestGetOrder(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-				BodyPart:   "Error: Order with ID was not found",
 			},
 		},
 	}
@@ -170,10 +169,6 @@ func TestDeleteOrder(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
-				BodyParts: []string{
-					order.OrderRef,
-					fmt.Sprintf(`"order_id":%v`, order.OrderID),
-				},
 			},
 		},
 		{
