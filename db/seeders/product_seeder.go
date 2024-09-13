@@ -1,13 +1,13 @@
-package seed
+package seeders
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"log"
 )
 
 func (s *Seeding) CreateProduct() {
 
-	products := []model.Product{
+	products := []models.Product{
 		{
 			ProductID:      1,
 			ProductCode:    "XB403",

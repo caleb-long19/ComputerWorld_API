@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/tests/helpers"
 	"fmt"
 	"net/http"
@@ -23,7 +23,7 @@ func TestPostProduct(t *testing.T) {
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: model.Product{
+			RequestBody: models.Product{
 				ProductCode:    "Sony",
 				ProductName:    "Xbox Series Z",
 				ManufacturerID: 1,
@@ -41,7 +41,7 @@ func TestPostProduct(t *testing.T) {
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: model.Product{
+			RequestBody: models.Product{
 				ProductCode:    "Sony",
 				ProductName:    "Xbox Series Z",
 				ManufacturerID: 1,
@@ -69,7 +69,7 @@ func TestGetProduct(t *testing.T) {
 		Url:    "/product",
 	}
 
-	pd := &model.Product{
+	pd := &models.Product{
 		ProductName:    "Xbox Series Y",
 		ProductCode:    "CHZXMGJ",
 		ManufacturerID: 1,
@@ -119,7 +119,7 @@ func TestPutProduct(t *testing.T) {
 		Url:    "/product",
 	}
 
-	product := &model.Product{
+	product := &models.Product{
 		ProductCode:    "TESTREF",
 		ProductName:    "Super Box 360",
 		ManufacturerID: 2,
@@ -135,7 +135,7 @@ func TestPutProduct(t *testing.T) {
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
 			},
-			RequestBody: model.Product{
+			RequestBody: models.Product{
 				ProductCode:    "CHZXMG45J",
 				ProductName:    "Xbox 1080",
 				ManufacturerID: 1,
@@ -173,7 +173,7 @@ func TestDeleteProduct(t *testing.T) {
 		Url:    "/product",
 	}
 
-	product := &model.Product{
+	product := &models.Product{
 		ProductCode:    "TESTREF",
 		ProductName:    "TEST_PRODUCT",
 		ManufacturerID: 2,

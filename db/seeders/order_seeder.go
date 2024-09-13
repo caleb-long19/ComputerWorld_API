@@ -1,13 +1,13 @@
-package seed
+package seeders
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"log"
 )
 
 func (s *Seeding) CreateOrder() {
 
-	orders := []model.Order{
+	orders := []models.Order{
 		{
 			OrderID:     1,
 			OrderAmount: 5,

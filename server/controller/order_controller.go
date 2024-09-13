@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
@@ -43,6 +43,14 @@ func (oc *OrderController) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, order)
 }
 
+func (oc *OrderController) GetAll(c echo.Context) error {
+	orders, err := oc.OrderRepository.GetAll()
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, orders)
+}
+
 func (oc *OrderController) Update(c echo.Context) error {
 	existingOrder, err := oc.OrderRepository.Get(c.Param("id"))
 	if err != nil {
@@ -58,7 +66,7 @@ func (oc *OrderController) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, updateOrder)
 	}
 
-	existingOrder = &model.Order{
+	existingOrder = &models.Order{
 		OrderID:     existingOrder.OrderID,
 		OrderRef:    updateOrder.OrderReference,
 		OrderAmount: updateOrder.OrderAmount,
@@ -83,12 +91,12 @@ func (oc *OrderController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Order successfully deleted")
 }
 
-func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) (*model.Order, error) {
+func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) (*models.Order, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
 
-	order := new(model.Order)
+	order := new(models.Order)
 	if request.OrderReference == "" {
 		fmt.Printf("Order Reference:", request.OrderReference)
 		return nil, errors.New("error: Invalid order reference")

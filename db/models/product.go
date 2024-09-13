@@ -1,4 +1,4 @@
-package model
+package models
 
 type Product struct {
 	ProductID      int    `gorm:"primaryKey;autoIncrement" json:"product_id"`

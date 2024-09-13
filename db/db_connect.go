@@ -1,8 +1,8 @@
 package db
 
 import (
-	"ComputerWorld_API/db/model"
-	"ComputerWorld_API/db/seed"
+	"ComputerWorld_API/db/models"
+	"ComputerWorld_API/db/seeders"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -22,11 +22,11 @@ func DatabaseConnection() *gorm.DB {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&model.Manufacturer{})
-	db.AutoMigrate(&model.Product{})
-	db.AutoMigrate(&model.Order{})
+	db.AutoMigrate(&models.Manufacturer{})
+	db.AutoMigrate(&models.Product{})
+	db.AutoMigrate(&models.Order{})
 
-	seeding := seed.NewSeed(db)
+	seeding := seeders.NewSeed(db)
 	seeding.CreateManufacturer()
 	seeding.CreateProduct()
 	seeding.CreateOrder()

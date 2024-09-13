@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/tests/helpers"
 	"fmt"
 	"net/http"
@@ -23,7 +23,7 @@ func TestPostManufacturer(t *testing.T) {
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: model.Manufacturer{
+			RequestBody: models.Manufacturer{
 				ManufacturerName: "Microsoft",
 			},
 			Expected: helpers.ExpectedResponse{
@@ -37,7 +37,7 @@ func TestPostManufacturer(t *testing.T) {
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: model.Manufacturer{
+			RequestBody: models.Manufacturer{
 				ManufacturerName: "Microsoft",
 			},
 			Expected: helpers.ExpectedResponse{
@@ -61,7 +61,7 @@ func TestGetManufacturer(t *testing.T) {
 		Url:    "/manufacturer",
 	}
 
-	mf := &model.Manufacturer{
+	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
 	ts.S.Database.Create(mf)
@@ -107,7 +107,7 @@ func TestPutManufacturer(t *testing.T) {
 		Url:    "/manufacturer",
 	}
 
-	mf := &model.Manufacturer{
+	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
 	ts.S.Database.Create(mf)
@@ -119,7 +119,7 @@ func TestPutManufacturer(t *testing.T) {
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
 			},
-			RequestBody: model.Manufacturer{
+			RequestBody: models.Manufacturer{
 				ManufacturerName: "Akira",
 			},
 			Expected: helpers.ExpectedResponse{
@@ -153,7 +153,7 @@ func TestDeleteManufacturer(t *testing.T) {
 		Url:    "/manufacturer",
 	}
 
-	mf := &model.Manufacturer{
+	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
 	ts.S.Database.Create(mf)

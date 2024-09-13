@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"ComputerWorld_API/db/model"
+	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
@@ -42,6 +42,14 @@ func (pc *ProductController) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, product)
 }
 
+func (pc *ProductController) GetAll(c echo.Context) error {
+	products, err := pc.ProductRepository.GetAll()
+	if err != nil {
+		return reponses.ErrorResponse(c, http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, products)
+}
+
 func (pc *ProductController) Update(c echo.Context) error {
 	existingProduct, err := pc.ProductRepository.Get(c.Param("id"))
 	if err != nil {
@@ -62,7 +70,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	existingProduct = &model.Product{
+	existingProduct = &models.Product{
 		ProductID:   existingProduct.ProductID,
 		ProductName: updateProduct.ProductName,
 		ProductCode: updateProduct.ProductCode,
@@ -86,12 +94,12 @@ func (pc *ProductController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Product successfully deleted")
 }
 
-func (pc *ProductController) validateProductRequest(request *requests.ProductRequest) (*model.Product, error) {
+func (pc *ProductController) validateProductRequest(request *requests.ProductRequest) (*models.Product, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
 
-	product := new(model.Product)
+	product := new(models.Product)
 	if request.ProductName == "" {
 		return nil, errors.New("error: Invalid product reference")
 	}
