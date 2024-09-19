@@ -13,7 +13,7 @@ func main() {
 
 	// Apply the CORS middleware using Echo's built-in middleware
 	app.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Front-end origin
+		AllowOrigins:     []string{"http://localhost:5173", "https://computer-world-wvo6.onrender.com"}, // Front-end origin
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true, // Enable if you need cookies, etc.
