@@ -71,11 +71,12 @@ func (pc *ProductController) Update(c echo.Context) error {
 	}
 
 	existingProduct = &models.Product{
-		ProductID:   existingProduct.ProductID,
-		ProductName: updateProduct.ProductName,
-		ProductCode: updateProduct.ProductCode,
-		Stock:       updateProduct.ProductStock,
-		Price:       updateProduct.ProductPrice,
+		ProductID:      existingProduct.ProductID,
+		ProductName:    updateProduct.ProductName,
+		ProductCode:    updateProduct.ProductCode,
+		ManufacturerID: updateProduct.ManufacturerID,
+		Stock:          updateProduct.ProductStock,
+		Price:          updateProduct.ProductPrice,
 	}
 
 	if err := pc.ProductRepository.Update(existingProduct); err != nil {

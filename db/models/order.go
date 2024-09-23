@@ -6,5 +6,5 @@ type Order struct {
 	OrderAmount int     `json:"order_amount"`
 	ProductID   int     `json:"product_id"`
 	OrderPrice  float64 `json:"order_price"`
-	Product     Product
+	Product     Product `gorm:"foreignKey:ProductID"` // Relationship to Product
 }
