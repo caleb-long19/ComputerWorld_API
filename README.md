@@ -14,6 +14,4 @@ The Computer World - API currently uses two databases. One of them labled comput
 ![alt text](diagrams/CW_API_Diagram.png)
 
 ## TO-DO
-- More tests need to be implemented to discover the flaws in the code and prevent problems in the future.
-- Refactor the code more and reduce the usage of global variables.
-- Create the front-end of the API to start displaying information and storing it in the database.
+- Implement for error handling and tests
