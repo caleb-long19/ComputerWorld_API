@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"regexp"
 )
 
 type ManufacturerController struct {
@@ -64,7 +65,25 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 	if updateManufacturer == nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer is required"))
 	}
+	// Check if ManufacturerName is provided and valid
+	if updateManufacturer.ManufacturerName == "" {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name is required"))
+	}
+	// Check if ManufacturerName isn't about a certain length
+	if len(updateManufacturer.ManufacturerName) > 30 {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name exceeds the maximum length of 30 characters"))
+	}
+	// Check for invalid characters in ManufacturerName
+	if !isValidManufacturerName(updateManufacturer.ManufacturerName) {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name contains invalid characters"))
+	}
+	// Check if the manufacturer name already exists (to prevent duplicates)
+	existingByName, _ := mc.ManufacturerRepository.Get(updateManufacturer.ManufacturerName)
+	if existingByName != nil && existingByName.ManufacturerID != existingManufacturer.ManufacturerID {
+		return reponses.ErrorResponse(c, http.StatusConflict, errors.New("manufacturer name already exists"))
+	}
 
+	// Validate the request further
 	_, err = mc.validateManufacturerRequest(updateManufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
@@ -75,6 +94,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 		ManufacturerName: updateManufacturer.ManufacturerName,
 	}
 
+	// Perform the update in the repository
 	err = mc.ManufacturerRepository.Update(existingManufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusConflict, err)
@@ -105,4 +125,11 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 	manufacturer.ManufacturerName = request.ManufacturerName
 
 	return manufacturer, nil
+}
+
+func isValidManufacturerName(name string) bool {
+	// Allow only letters
+	validNamePattern := `^[a-zA-Z]`
+	matched, _ := regexp.MatchString(validNamePattern, name)
+	return matched
 }
