@@ -1,17 +1,20 @@
 package controller
 
 import (
+	"ComputerWorld_API/db"
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"net/http"
 )
 
 type OrderController struct {
 	OrderRepository repositories.OrderInterface
+	DB              *gorm.DB
 }
 
 func (oc *OrderController) Create(c echo.Context) error {
@@ -23,6 +26,16 @@ func (oc *OrderController) Create(c echo.Context) error {
 	order, err := oc.validateOrderRequest(requestOrder)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	errCPS := CalculateProductStock(db.DatabaseConnection(), order)
+	if errCPS != nil {
+		return errCPS
+	}
+
+	errCOP := CalculateOrderPrice(db.DatabaseConnection(), order)
+	if errCOP != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errCOP)
 	}
 
 	err = oc.OrderRepository.Create(order)
@@ -52,6 +65,7 @@ func (oc *OrderController) GetAll(c echo.Context) error {
 
 func (oc *OrderController) Update(c echo.Context) error {
 	existingOrder, err := oc.OrderRepository.Get(c.Param("id"))
+
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusNotFound, err)
 	}
@@ -70,7 +84,11 @@ func (oc *OrderController) Update(c echo.Context) error {
 		OrderRef:    updateOrder.OrderReference,
 		OrderAmount: updateOrder.OrderAmount,
 		ProductID:   updateOrder.ProductID,
-		OrderPrice:  updateOrder.OrderPrice,
+	}
+
+	errC := CalculateOrderPrice(db.DatabaseConnection(), existingOrder)
+	if errC != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errC)
 	}
 
 	if err := oc.OrderRepository.Update(existingOrder); err != nil {
@@ -90,6 +108,36 @@ func (oc *OrderController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Order successfully deleted")
 }
 
+func CalculateOrderPrice(db *gorm.DB, order *models.Order) error {
+	var product models.Product
+	if err := db.First(&product, order.ProductID).Error; err != nil {
+		return err
+	}
+	order.OrderPrice = float64(order.OrderAmount) * product.Price
+	return nil
+}
+
+func CalculateProductStock(db *gorm.DB, order *models.Order) error {
+	var product models.Product
+	if err := db.First(&product, order.ProductID).Error; err != nil {
+		return err
+	}
+
+	// Check if there's enough stock to fulfill the order
+	if product.Stock < order.OrderAmount {
+		return errors.New("insufficient stock for the product")
+	}
+
+	product.Stock -= order.OrderAmount
+
+	// Save the updated product stock in the database
+	if err := db.Save(&product).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) (*models.Order, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
@@ -105,14 +153,10 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 	if request.ProductID == 0 {
 		return nil, errors.New("error: Invalid product id")
 	}
-	if request.OrderPrice <= 0.0 {
-		return nil, errors.New("error: Invalid product price")
-	}
 
 	order.OrderRef = request.OrderReference
 	order.OrderAmount = request.OrderAmount
 	order.ProductID = request.ProductID
-	order.OrderPrice = request.OrderPrice
 
 	return order, nil
 }
