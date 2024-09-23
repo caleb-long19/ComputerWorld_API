@@ -28,9 +28,14 @@ func (oc *OrderController) Create(c echo.Context) error {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	errC := CalculateOrderPrice(db.DatabaseConnection(), order)
-	if errC != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, errC)
+	errCPS := CalculateProductStock(db.DatabaseConnection(), order)
+	if errCPS != nil {
+		return errCPS
+	}
+
+	errCOP := CalculateOrderPrice(db.DatabaseConnection(), order)
+	if errCOP != nil {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errCOP)
 	}
 
 	err = oc.OrderRepository.Create(order)
@@ -109,6 +114,27 @@ func CalculateOrderPrice(db *gorm.DB, order *models.Order) error {
 		return err
 	}
 	order.OrderPrice = float64(order.OrderAmount) * product.Price
+	return nil
+}
+
+func CalculateProductStock(db *gorm.DB, order *models.Order) error {
+	var product models.Product
+	if err := db.First(&product, order.ProductID).Error; err != nil {
+		return err
+	}
+
+	// Check if there's enough stock to fulfill the order
+	if product.Stock < order.OrderAmount {
+		return errors.New("insufficient stock for the product")
+	}
+
+	product.Stock -= order.OrderAmount
+
+	// Save the updated product stock in the database
+	if err := db.Save(&product).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 
