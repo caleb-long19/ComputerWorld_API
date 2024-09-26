@@ -125,7 +125,7 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 		return nil, errors.New("error: Manufacturer name must be between 1 and 25 characters")
 	}
 	// Check for invalid characters in Manufacturer Name
-	if !isValidManufacturerName(request.ManufacturerName) {
+	if !isValidManufacturerInput(request.ManufacturerName) {
 		return nil, errors.New("manufacturer name contains invalid characters")
 	}
 	// Check if manufacturer exists
@@ -144,7 +144,7 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 
 // TODO: NEED TO MOVE THESE VALIDATIONS AND EXIST CHECKS TO THE REPOSITORY FILE (Manufacturer_repository)
 
-func isValidManufacturerName(name string) bool {
+func isValidManufacturerInput(name string) bool {
 	// Allow only letters
 	validNamePattern := `^[a-zA-Z\s]`
 	matched, _ := regexp.MatchString(validNamePattern, name)

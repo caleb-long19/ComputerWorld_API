@@ -158,6 +158,8 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	return product, nil
 }
 
+// TODO: NEED TO MOVE THESE VALIDATIONS AND EXIST CHECKS TO THE REPOSITORY FILE (Manufacturer_repository)
+
 func isValidProductInput(productCode string, productName string, ManufacturerID int, ProductStock int, ProductPrice float64) (bool, bool, bool, bool, bool) {
 	// Allow only letters for product code
 	validCodePattern := `^[a-zA-Z0-9]+$`

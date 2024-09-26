@@ -201,6 +201,7 @@ func orderExists(orderReference string, db *gorm.DB, order *models.Order) (bool,
 
 // Calculations Methods >>
 // These are used to automatically calculate the order prices and product stock after creation/updates
+// TODO: Move these calculations into the repository file (order.repository)
 
 func CalculateOrderPrice(db *gorm.DB, order *models.Order) error {
 	var product models.Product
