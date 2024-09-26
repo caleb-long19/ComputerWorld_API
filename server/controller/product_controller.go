@@ -8,6 +8,8 @@ import (
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"regexp"
+	"strconv"
 )
 
 type ProductController struct {
@@ -95,6 +97,9 @@ func (pc *ProductController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Product successfully deleted")
 }
 
+// Validation Methods >>>
+// Simple validation methods to prevent incorrect values from being requested
+
 func (pc *ProductController) validateProductRequest(request *requests.ProductRequest) (*models.Product, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
@@ -116,6 +121,15 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	if request.ProductPrice <= 0.0 {
 		return nil, errors.New("error: Invalid product price")
 	}
+	// Check for invalid characters in product values
+	if validName, validCode, validID, validStock, validPrice := isValidProductInput(
+		request.ProductName,
+		request.ProductCode,
+		request.ManufacturerID,
+		request.ProductStock,
+		request.ProductPrice); !validCode || !validName || !validID || !validStock || !validPrice {
+		return nil, errors.New("product input contains invalid characters or format")
+	}
 
 	product.ProductName = request.ProductName
 	product.ProductCode = request.ProductCode
@@ -124,4 +138,28 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	product.Price = request.ProductPrice
 
 	return product, nil
+}
+
+func isValidProductInput(productName string, productCode string, ManufacturerID int, ProductStock int, ProductPrice float64) (bool, bool, bool, bool, bool) {
+	// Allow only letters for product name
+	validNamePattern := `^[a-zA-Z0-9]+$`
+	matchedName, _ := regexp.MatchString(validNamePattern, productName)
+
+	// Allow only letters for product name
+	validCodePattern := `^[a-zA-Z0-9]+$`
+	matchedCode, _ := regexp.MatchString(validCodePattern, productCode)
+
+	// Allow only whole numbers for manufacturer id
+	validIDPattern := `^[0-9]+$`
+	matchedID, _ := regexp.MatchString(validIDPattern, strconv.Itoa(ManufacturerID))
+
+	// Allow only whole numbers for stock
+	validStockPattern := `^[0-9]+$`
+	matchedStock, _ := regexp.MatchString(validStockPattern, strconv.Itoa(ProductStock))
+
+	// Allow only whole numbers for stock
+	validPricePattern := `^[0-9]+$`
+	matchedPrice, _ := regexp.MatchString(validPricePattern, strconv.FormatFloat(ProductPrice, 'f', -1, 64))
+
+	return matchedName, matchedCode, matchedID, matchedStock, matchedPrice
 }

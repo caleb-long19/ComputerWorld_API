@@ -73,16 +73,11 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 	if len(updateManufacturer.ManufacturerName) > 30 {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name exceeds the maximum length of 30 characters"))
 	}
-	// Check for invalid characters in ManufacturerName
-	if !isValidManufacturerName(updateManufacturer.ManufacturerName) {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name contains invalid characters"))
-	}
 	// Check if the manufacturer name already exists (to prevent duplicates)
 	existingByName, _ := mc.ManufacturerRepository.Get(updateManufacturer.ManufacturerName)
 	if existingByName != nil && existingByName.ManufacturerID != existingManufacturer.ManufacturerID {
 		return reponses.ErrorResponse(c, http.StatusConflict, errors.New("manufacturer name already exists"))
 	}
-
 	// Validate the request further
 	_, err = mc.validateManufacturerRequest(updateManufacturer)
 	if err != nil {
@@ -112,6 +107,8 @@ func (mc *ManufacturerController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
 }
 
+// Validation Methods >>>
+
 func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
@@ -120,6 +117,10 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 	manufacturer := new(models.Manufacturer)
 	if request.ManufacturerName == "" {
 		return nil, errors.New("error: Invalid manufacturer name")
+	}
+	// Check for invalid characters in Manufacturer Name
+	if !isValidManufacturerName(request.ManufacturerName) {
+		return nil, errors.New("manufacturer name contains invalid characters")
 	}
 
 	manufacturer.ManufacturerName = request.ManufacturerName
