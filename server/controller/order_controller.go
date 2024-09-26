@@ -30,11 +30,11 @@ func (oc *OrderController) Create(c echo.Context) error {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
+	// Connect to the database and calculate the prices and stock
 	errCPS := CalculateProductStock(db.DatabaseConnection(), order)
 	if errCPS != nil {
 		return errCPS
 	}
-
 	errCOP := CalculateOrderPrice(db.DatabaseConnection(), order)
 	if errCOP != nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, errCOP)
@@ -132,8 +132,14 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 	if request.OrderReference == "" {
 		return nil, errors.New("error: Invalid order reference")
 	}
+	if len(request.OrderReference) < 3 || len(request.OrderReference) > 12 {
+		return nil, errors.New("error: Order reference must be between 3 and 12 characters")
+	}
 	if request.OrderAmount <= 0 {
 		return nil, errors.New("error: Invalid order amount")
+	}
+	if request.OrderAmount > 50 {
+		return nil, errors.New("error: Order amount exceeds maximum limit")
 	}
 	if request.ProductID <= 0 {
 		return nil, errors.New("error: Invalid product id")
@@ -145,6 +151,14 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 		request.ProductID); !validRef || !validAmount || !validID {
 		return nil, errors.New("order input contains invalid characters or format")
 	}
+	// Check if order reference exists
+	exists, err := orderExists(request.OrderReference, db.DatabaseConnection(), order)
+	if err != nil {
+		return nil, errors.New("error: An order with this reference already exists")
+	}
+	if exists {
+		return nil, errors.New("error: An order with this reference already exists")
+	}
 
 	order.OrderRef = request.OrderReference
 	order.OrderAmount = request.OrderAmount
@@ -152,6 +166,8 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 
 	return order, nil
 }
+
+// TODO: NEED TO MOVE THESE VALIDATIONS AND EXIST CHECKS TO THE REPOSITORY FILE (Order_repository)
 
 func isValidOrderInput(reference string, amount int, productID int) (bool, bool, bool) {
 	// Allow only letters for reference
@@ -169,8 +185,23 @@ func isValidOrderInput(reference string, amount int, productID int) (bool, bool,
 	return matchedRef, matchedAmount, matchedID
 }
 
+func orderExists(orderReference string, db *gorm.DB, order *models.Order) (bool, error) {
+	// Attempt to find the order in the database
+	err := db.Where("order_ref = ?", orderReference).First(&order).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Order not found, return false
+			return false, nil
+		}
+		return false, err
+	}
+	// Order found, return true
+	return true, nil
+}
+
 // Calculations Methods >>
 // These are used to automatically calculate the order prices and product stock after creation/updates
+// TODO: Move these calculations into the repository file (order.repository)
 
 func CalculateOrderPrice(db *gorm.DB, order *models.Order) error {
 	var product models.Product

@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"ComputerWorld_API/db"
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"net/http"
 	"regexp"
 )
@@ -107,7 +109,8 @@ func (mc *ManufacturerController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
 }
 
-// Validation Methods >>>
+// Validation Methods >>
+// Simple validation methods to prevent incorrect values from being requested>
 
 func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
 	if request == nil {
@@ -118,9 +121,20 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 	if request.ManufacturerName == "" {
 		return nil, errors.New("error: Invalid manufacturer name")
 	}
+	if len(request.ManufacturerName) < 1 || len(request.ManufacturerName) > 25 {
+		return nil, errors.New("error: Manufacturer name must be between 1 and 25 characters")
+	}
 	// Check for invalid characters in Manufacturer Name
-	if !isValidManufacturerName(request.ManufacturerName) {
+	if !isValidManufacturerInput(request.ManufacturerName) {
 		return nil, errors.New("manufacturer name contains invalid characters")
+	}
+	// Check if manufacturer exists
+	exists, err := manufacturerExists(request.ManufacturerName, db.DatabaseConnection(), manufacturer)
+	if err != nil {
+		return nil, errors.New("error: A manufacturer with this name already exists")
+	}
+	if exists {
+		return nil, errors.New("error: An manufacturer with this name already exists")
 	}
 
 	manufacturer.ManufacturerName = request.ManufacturerName
@@ -128,9 +142,25 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 	return manufacturer, nil
 }
 
-func isValidManufacturerName(name string) bool {
+// TODO: NEED TO MOVE THESE VALIDATIONS AND EXIST CHECKS TO THE REPOSITORY FILE (Manufacturer_repository)
+
+func isValidManufacturerInput(name string) bool {
 	// Allow only letters
-	validNamePattern := `^[a-zA-Z]`
+	validNamePattern := `^[a-zA-Z\s]`
 	matched, _ := regexp.MatchString(validNamePattern, name)
 	return matched
+}
+
+func manufacturerExists(manufacturerName string, db *gorm.DB, manufacturer *models.Manufacturer) (bool, error) {
+	// Attempt to find the manufacturer in the database
+	err := db.Where("manufacturer_name = ?", manufacturerName).First(&manufacturer).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Manufacturer not found, return false
+			return false, nil
+		}
+		return false, err
+	}
+	// Manufacturer found, return true
+	return true, nil
 }
