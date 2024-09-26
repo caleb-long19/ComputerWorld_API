@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"regexp"
 )
 
 type ManufacturerController struct {
@@ -64,7 +65,20 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 	if updateManufacturer == nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer is required"))
 	}
-
+	// Check if ManufacturerName is provided and valid
+	if updateManufacturer.ManufacturerName == "" {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name is required"))
+	}
+	// Check if ManufacturerName isn't about a certain length
+	if len(updateManufacturer.ManufacturerName) > 30 {
+		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name exceeds the maximum length of 30 characters"))
+	}
+	// Check if the manufacturer name already exists (to prevent duplicates)
+	existingByName, _ := mc.ManufacturerRepository.Get(updateManufacturer.ManufacturerName)
+	if existingByName != nil && existingByName.ManufacturerID != existingManufacturer.ManufacturerID {
+		return reponses.ErrorResponse(c, http.StatusConflict, errors.New("manufacturer name already exists"))
+	}
+	// Validate the request further
 	_, err = mc.validateManufacturerRequest(updateManufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
@@ -75,6 +89,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 		ManufacturerName: updateManufacturer.ManufacturerName,
 	}
 
+	// Perform the update in the repository
 	err = mc.ManufacturerRepository.Update(existingManufacturer)
 	if err != nil {
 		return reponses.ErrorResponse(c, http.StatusConflict, err)
@@ -92,6 +107,8 @@ func (mc *ManufacturerController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
 }
 
+// Validation Methods >>>
+
 func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
@@ -101,8 +118,19 @@ func (mc *ManufacturerController) validateManufacturerRequest(request *requests.
 	if request.ManufacturerName == "" {
 		return nil, errors.New("error: Invalid manufacturer name")
 	}
+	// Check for invalid characters in Manufacturer Name
+	if !isValidManufacturerName(request.ManufacturerName) {
+		return nil, errors.New("manufacturer name contains invalid characters")
+	}
 
 	manufacturer.ManufacturerName = request.ManufacturerName
 
 	return manufacturer, nil
+}
+
+func isValidManufacturerName(name string) bool {
+	// Allow only letters
+	validNamePattern := `^[a-zA-Z]`
+	matched, _ := regexp.MatchString(validNamePattern, name)
+	return matched
 }
