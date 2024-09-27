@@ -16,6 +16,15 @@ func TestPostProduct(t *testing.T) {
 		Url:    "/product/",
 	}
 
+	pd := &models.Product{
+		ProductCode:    "DUPLIC8TE",
+		ProductName:    "Xbox Duplicate",
+		ManufacturerID: 1,
+		Stock:          250,
+		Price:          400,
+	}
+	ts.S.Database.Create(pd)
+
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can create a Product",
@@ -54,20 +63,105 @@ func TestPostProduct(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot create product as it already exists!",
+			TestName: "Cannot create product as product code contains incorrect formatting",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
 			RequestBody: models.Product{
-				ProductCode:    "FSDFS3",
-				ProductName:    "Xbox Series P",
+				ProductCode:    "DUPLIC8TE@#@#",
+				ProductName:    "Xbox Series PS",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as product name contains incorrect formatting",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "DUPLIC8TES",
+				ProductName:    "Xbox Series PS##@$",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as product code already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "DUPLIC8TE",
+				ProductName:    "Xbox Series PS",
 				ManufacturerID: 1,
 				Stock:          250,
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot create product as product code length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "GGGGGGGGGGGGGGGGGGGGGG",
+				ProductName:    "Xbox One Y",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as product name already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "FSDFSGG3",
+				ProductName:    "Xbox Duplicate",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot create product as product name length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "UIGHGJD",
+				ProductName:    "XBOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOX",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -119,6 +213,23 @@ func TestPostProduct(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create product as manufacturer id does not exist!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTXSK",
+				ProductName:    "Xbox Series KL",
+				ManufacturerID: 99999999,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
 			},
 		},
 		{
@@ -184,6 +295,16 @@ func TestGetProduct(t *testing.T) {
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusOK,
+			},
+		},
+		{
+			TestName: "Can retrieve all products without ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/", request.Url),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,

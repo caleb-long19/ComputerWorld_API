@@ -3,8 +3,8 @@ package controller
 import (
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
-	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
+	"ComputerWorld_API/server/responses"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,12 +22,12 @@ func (pc *ProductController) Create(c echo.Context) error {
 	}
 	product, err := pc.validateProductRequest(requestProduct)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	err = pc.ProductRepository.Create(product)
+	err = pc.ProductRepository.Create(product, c)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusConflict, err)
+		return responses.ErrorResponse(c, http.StatusConflict, err)
 	}
 
 	return c.JSON(http.StatusCreated, product)
@@ -36,7 +36,7 @@ func (pc *ProductController) Create(c echo.Context) error {
 func (pc *ProductController) Get(c echo.Context) error {
 	product, err := pc.ProductRepository.Get(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	return c.JSON(http.StatusOK, product)
@@ -45,7 +45,7 @@ func (pc *ProductController) Get(c echo.Context) error {
 func (pc *ProductController) GetAll(c echo.Context) error {
 	products, err := pc.ProductRepository.GetAll()
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusInternalServerError, err)
+		return responses.ErrorResponse(c, http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, products)
 }
@@ -53,7 +53,7 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 func (pc *ProductController) Update(c echo.Context) error {
 	existingProduct, err := pc.ProductRepository.Get(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	var updateProduct = new(requests.ProductRequest)
@@ -66,7 +66,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 	}
 	_, err = pc.validateProductRequest(updateProduct)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	existingProduct = &models.Product{
@@ -79,7 +79,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 	}
 
 	if err := pc.ProductRepository.Update(existingProduct); err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	return c.JSON(http.StatusOK, existingProduct)
@@ -88,7 +88,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 func (pc *ProductController) Delete(c echo.Context) error {
 	err := pc.ProductRepository.Delete(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	return c.JSON(http.StatusOK, "Product successfully deleted")
