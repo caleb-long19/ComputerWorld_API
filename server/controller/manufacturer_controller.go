@@ -3,8 +3,8 @@ package controller
 import (
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
-	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
+	"ComputerWorld_API/server/responses"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,12 +22,12 @@ func (mc *ManufacturerController) Create(c echo.Context) error {
 	}
 	manufacturer, err := mc.validateManufacturerRequest(requestManufacturer)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	err = mc.ManufacturerRepository.Create(manufacturer)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusConflict, err)
+		return responses.ErrorResponse(c, http.StatusConflict, err)
 	}
 
 	return c.JSON(http.StatusCreated, manufacturer)
@@ -36,7 +36,7 @@ func (mc *ManufacturerController) Create(c echo.Context) error {
 func (mc *ManufacturerController) Get(c echo.Context) error {
 	manufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	return c.JSON(http.StatusOK, manufacturer)
@@ -45,7 +45,7 @@ func (mc *ManufacturerController) Get(c echo.Context) error {
 func (mc *ManufacturerController) GetAll(c echo.Context) error {
 	manufacturers, err := mc.ManufacturerRepository.GetAll()
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 	return c.JSON(http.StatusOK, manufacturers)
 }
@@ -53,34 +53,34 @@ func (mc *ManufacturerController) GetAll(c echo.Context) error {
 func (mc *ManufacturerController) Update(c echo.Context) error {
 	existingManufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	updateManufacturer := new(requests.ManufacturerRequest)
 	if err := c.Bind(&updateManufacturer); err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	if updateManufacturer == nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer is required"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer is required"))
 	}
 	// Check if ManufacturerName is provided and valid
 	if updateManufacturer.ManufacturerName == "" {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name is required"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name is required"))
 	}
 	// Check if ManufacturerName isn't about a certain length
 	if len(updateManufacturer.ManufacturerName) > 30 {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name exceeds the maximum length of 30 characters"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, errors.New("manufacturer name exceeds the maximum length of 30 characters"))
 	}
 	// Check if the manufacturer name already exists (to prevent duplicates)
 	existingByName, _ := mc.ManufacturerRepository.Get(updateManufacturer.ManufacturerName)
 	if existingByName != nil && existingByName.ManufacturerID != existingManufacturer.ManufacturerID {
-		return reponses.ErrorResponse(c, http.StatusConflict, errors.New("manufacturer name already exists"))
+		return responses.ErrorResponse(c, http.StatusConflict, errors.New("manufacturer name already exists"))
 	}
 	// Validate the request further
 	_, err = mc.validateManufacturerRequest(updateManufacturer)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusBadRequest, err)
+		return responses.ErrorResponse(c, http.StatusBadRequest, err)
 	}
 
 	existingManufacturer = &models.Manufacturer{
@@ -91,7 +91,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 	// Perform the update in the repository
 	err = mc.ManufacturerRepository.Update(existingManufacturer)
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusConflict, err)
+		return responses.ErrorResponse(c, http.StatusConflict, err)
 	}
 
 	return c.JSON(http.StatusOK, existingManufacturer)
@@ -100,7 +100,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 func (mc *ManufacturerController) Delete(c echo.Context) error {
 	err := mc.ManufacturerRepository.Delete(c.Param("id"))
 	if err != nil {
-		return reponses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, err)
 	}
 
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
