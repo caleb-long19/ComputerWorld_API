@@ -27,7 +27,7 @@ func NewManufacturerRepository(db *gorm.DB) *ManufacturerRepository {
 
 func (repo *ManufacturerRepository) Create(manufacturer *models.Manufacturer) error {
 	// Validate Manufacturer
-	err := validateInputs(manufacturer.ManufacturerName, repo.DB, manufacturer)
+	err := validateManufacturerInputs(repo.DB, manufacturer)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (repo *ManufacturerRepository) GetAll() ([]*models.Manufacturer, error) {
 
 func (repo *ManufacturerRepository) Update(manufacturer *models.Manufacturer) error {
 	// Validate Manufacturer
-	err := validateInputs(manufacturer.ManufacturerName, repo.DB, manufacturer)
+	err := validateManufacturerInputs(repo.DB, manufacturer)
 	if err != nil {
 		return err
 	}
@@ -71,11 +71,11 @@ func (repo *ManufacturerRepository) Delete(id interface{}) error {
 }
 
 // Validation >>>
-// I stored all other validations into one method so I only need to call it once as is it being used in the create & update methods >>>
+// I stored all other validations into one method, so I only need to call it once as is it being used in the create & update methods >>>
 
-func validateInputs(name string, db *gorm.DB, manufacturer *models.Manufacturer) error {
+func validateManufacturerInputs(db *gorm.DB, manufacturer *models.Manufacturer) error {
 	// Check if manufacturer exists
-	exists, err := manufacturerExists(name, db, manufacturer)
+	exists, err := manufacturerExists(db, manufacturer)
 	if err != nil {
 		return errors.New("error: An error occurred while checking manufacturer existence")
 	}
@@ -99,9 +99,9 @@ func isValidManufacturerInput(manufacturer *models.Manufacturer) bool {
 	return matched
 }
 
-func manufacturerExists(name string, db *gorm.DB, manufacturer *models.Manufacturer) (bool, error) {
+func manufacturerExists(db *gorm.DB, manufacturer *models.Manufacturer) (bool, error) {
 	// Attempt to find the manufacturer in the database
-	err := db.Where("manufacturer_name = ?", name).First(&manufacturer).Error
+	err := db.Where("manufacturer_name = ?", manufacturer.ManufacturerName).First(&manufacturer).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Manufacturer not found, return false

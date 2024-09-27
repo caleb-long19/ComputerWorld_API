@@ -1,17 +1,13 @@
 package controller
 
 import (
-	"ComputerWorld_API/db"
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/reponses"
 	"ComputerWorld_API/server/requests"
 	"errors"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 	"net/http"
-	"regexp"
-	"strconv"
 )
 
 type ProductController struct {
@@ -131,23 +127,6 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	if request.ProductPrice <= 0.0 {
 		return nil, errors.New("error: Invalid product price")
 	}
-	// Check for invalid characters in product values
-	if validCode, validName, validID, validStock, validPrice := isValidProductInput(
-		request.ProductCode,
-		request.ProductName,
-		request.ManufacturerID,
-		request.ProductStock,
-		request.ProductPrice); !validCode || !validName || !validID || !validStock || !validPrice {
-		return nil, errors.New("product input contains invalid characters or format")
-	}
-	// Check if product exists
-	exists, err := productExists(request.ProductCode, request.ProductName, db.DatabaseConnection(), product)
-	if err != nil {
-		return nil, errors.New("error: A product with this name or code already exists")
-	}
-	if exists {
-		return nil, errors.New("error: A product with this name or code already exists")
-	}
 
 	product.ProductCode = request.ProductCode
 	product.ProductName = request.ProductName
@@ -156,43 +135,4 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 	product.Price = request.ProductPrice
 
 	return product, nil
-}
-
-// TODO: NEED TO MOVE THESE VALIDATIONS AND EXIST CHECKS TO THE REPOSITORY FILE (Manufacturer_repository)
-
-func isValidProductInput(productCode string, productName string, ManufacturerID int, ProductStock int, ProductPrice float64) (bool, bool, bool, bool, bool) {
-	// Allow only letters for product code
-	validCodePattern := `^[a-zA-Z0-9]+$`
-	matchedCode, _ := regexp.MatchString(validCodePattern, productCode)
-
-	// Allow only letters for product name
-	validNamePattern := `^[a-zA-Z0-9\s]+$`
-	matchedName, _ := regexp.MatchString(validNamePattern, productName)
-
-	// Allow only whole numbers for manufacturer id
-	validIDPattern := `^[0-9]+$`
-	matchedID, _ := regexp.MatchString(validIDPattern, strconv.Itoa(ManufacturerID))
-
-	// Allow only whole numbers for stock
-	validStockPattern := `^[0-9]+$`
-	matchedStock, _ := regexp.MatchString(validStockPattern, strconv.Itoa(ProductStock))
-
-	// Allow only numbers for price
-	validPricePattern := `^\d+(\.\d{1,2})?$`
-	matchedPrice, _ := regexp.MatchString(validPricePattern, strconv.FormatFloat(ProductPrice, 'f', -1, 64))
-
-	return matchedCode, matchedName, matchedID, matchedStock, matchedPrice
-}
-
-func productExists(productCode string, productName string, db *gorm.DB, product *models.Product) (bool, error) {
-	// Attempt to find the product name or code in the database
-	err := db.Where("product_code = ?", productCode).Or(db.Where("product_name = ?", productName)).First(&product).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Product not found, return false
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
 }
