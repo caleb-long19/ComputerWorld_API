@@ -113,7 +113,7 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 		return nil, errors.New("error: Invalid product name")
 	}
 	if len(request.ProductName) < 3 || len(request.ProductName) > 25 {
-		return nil, errors.New("error: Product name must be between 1 and 25 characters")
+		return nil, errors.New("error: Product name must be between 3 and 25 characters")
 	}
 	if request.ManufacturerID <= 0 {
 		return nil, errors.New("error: Invalid manufacturer ID")
