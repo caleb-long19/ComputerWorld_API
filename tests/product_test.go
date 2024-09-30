@@ -76,7 +76,7 @@ func TestPostProduct(t *testing.T) {
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusLengthRequired,
 			},
 		},
 		{
@@ -86,14 +86,14 @@ func TestPostProduct(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Product{
-				ProductCode:    "DUPLIC8TES",
+				ProductCode:    "DUPLI",
 				ProductName:    "Xbox Series PS##@$",
 				ManufacturerID: 1,
 				Stock:          250,
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusNotAcceptable,
 			},
 		},
 		{
@@ -127,7 +127,7 @@ func TestPostProduct(t *testing.T) {
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusLengthRequired,
 			},
 		},
 		{
@@ -161,7 +161,7 @@ func TestPostProduct(t *testing.T) {
 				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusLengthRequired,
 			},
 		},
 		{
@@ -360,8 +360,44 @@ func TestPutProduct(t *testing.T) {
 				Price:          250,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusOK,
+				StatusCode: http.StatusCreated,
 				BodyParts:  []string{fmt.Sprintf(`"product_code":"CHZXMG45J"`)},
+			},
+		},
+		{
+			TestName: "Can update product when stock is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTRR",
+				ProductName:    "Super Box 720",
+				ManufacturerID: 1,
+				Stock:          0,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{`"product_name":"Super Box 720"`},
+			},
+		},
+		{
+			TestName: "Can update product back to previous data!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTREF",
+				ProductName:    "Super Box 360",
+				ManufacturerID: 1,
+				Stock:          350,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{`"product_name":"Super Box 360"`},
 			},
 		},
 		{
@@ -369,6 +405,176 @@ func TestPutProduct(t *testing.T) {
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+			},
+		},
+		{
+			TestName: "Cannot update product as product code contains incorrect formatting",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "DU@#@#",
+				ProductName:    "Xbox Series PS",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update product as product name contains incorrect formatting",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTINGPN",
+				ProductName:    "Xbox Series PS##@$",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update product as product code already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTREF",
+				ProductName:    "Xbox Series PS",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot update product as product code length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "GGGGGGGGGGGGGGGGGGGGGG",
+				ProductName:    "Xbox One Y",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
+			},
+		},
+		{
+			TestName: "Cannot update product as product name already exists!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "FSDFSGG3",
+				ProductName:    "Super Box 360",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot update product as product name length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "UIGHGJD",
+				ProductName:    "XBOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOX",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
+			},
+		},
+		{
+			TestName: "Cannot update product as product code is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "",
+				ProductName:    "Xbox Series V",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update product as product name is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "DSFV3S",
+				ProductName:    "",
+				ManufacturerID: 1,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update product as manufacturer id is empty!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "Sony",
+				ProductName:    "Xbox Series Z",
+				ManufacturerID: 0,
+				Stock:          250,
+				Price:          400,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update product as manufacturer id does not exist!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, product.ProductID),
+			},
+			RequestBody: models.Product{
+				ProductCode:    "TESTXSK",
+				ProductName:    "Xbox Series KL",
+				ManufacturerID: 99999999,
+				Stock:          250,
+				Price:          400,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,

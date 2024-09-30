@@ -16,6 +16,13 @@ func TestPostOrder(t *testing.T) {
 		Url:    "/order/",
 	}
 
+	ord := &models.Order{
+		OrderRef:    "TESTREF",
+		OrderAmount: 3,
+		ProductID:   1,
+	}
+	ts.S.Database.Create(ord)
+
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can create an Order",
@@ -27,11 +34,25 @@ func TestPostOrder(t *testing.T) {
 				OrderRef:    "SGWTDF",
 				OrderAmount: 3,
 				ProductID:   2,
-				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
 				BodyParts:  []string{`"order_ref":"SGWTDF"`},
+			},
+		},
+		{
+			TestName: "Cannot create an order as order ref contains special characters",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "TESTREF##@",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
 			},
 		},
 		{
@@ -44,10 +65,39 @@ func TestPostOrder(t *testing.T) {
 				OrderRef:    "",
 				OrderAmount: 3,
 				ProductID:   2,
-				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot create an order as order ref already exists",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "TESTREF",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot create an order as order ref length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Order{
+				OrderRef:    "WEARECHECKINGLENGTH",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
 			},
 		},
 		{
@@ -57,10 +107,9 @@ func TestPostOrder(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Order{
-				OrderRef:    "SGWTDF",
+				OrderRef:    "N00RDRAGV",
 				OrderAmount: 0,
 				ProductID:   2,
-				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -73,30 +122,27 @@ func TestPostOrder(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Order{
-				OrderRef:    "SGWTDF",
+				OrderRef:    "N01DGVN",
 				OrderAmount: 3,
 				ProductID:   0,
-				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			//TODO: The price should be setup automatically, this test will become obsolete, only using it for now!
-			TestName: "Cannot create an order as no Order Price was given",
+			TestName: "Cannot create an order as Product ID does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
 			RequestBody: models.Order{
-				OrderRef:    "SGWTDF",
+				OrderRef:    "TestIDExists",
 				OrderAmount: 3,
-				ProductID:   2,
-				OrderPrice:  0,
+				ProductID:   99999999,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusNotFound,
 			},
 		},
 	}
@@ -120,7 +166,6 @@ func TestGetOrder(t *testing.T) {
 		OrderRef:    "3GNGKF",
 		OrderAmount: 2,
 		ProductID:   2,
-		OrderPrice:  700,
 	}
 	ts.S.Database.Create(order)
 
@@ -179,9 +224,15 @@ func TestPutOrder(t *testing.T) {
 		OrderRef:    "TESTREF",
 		OrderAmount: 10,
 		ProductID:   2,
-		OrderPrice:  350,
 	}
 	ts.S.Database.Create(order)
+
+	orderDuplicate := &models.Order{
+		OrderRef:    "TESTDUPE",
+		OrderAmount: 5,
+		ProductID:   2,
+	}
+	ts.S.Database.Create(orderDuplicate)
 
 	cases := []helpers.TestCase{
 		{
@@ -194,10 +245,9 @@ func TestPutOrder(t *testing.T) {
 				OrderRef:    "VBJC53",
 				OrderAmount: 5,
 				ProductID:   1,
-				OrderPrice:  700,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusOK,
+				StatusCode: http.StatusCreated,
 				BodyParts:  []string{fmt.Sprintf(`"order_ref":"VBJC53"`)},
 			},
 		},
@@ -206,6 +256,111 @@ func TestPutOrder(t *testing.T) {
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
+			},
+		},
+		{
+			TestName: "Cannot update an order as order ref contains special characters",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "TESTREF##@",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update an order as no Order Reference was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update an order as order ref already exists",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, orderDuplicate.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "TESTDUPE",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusConflict,
+			},
+		},
+		{
+			TestName: "Cannot update an order as order ref length is above maximum",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "WEARECHECKINGLENGTHAGAIN",
+				OrderAmount: 3,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
+			},
+		},
+		{
+			TestName: "Cannot update an order as no Order Amount was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "N00RDGV",
+				OrderAmount: 0,
+				ProductID:   2,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update an order as no ProductID was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "N01DGVN",
+				OrderAmount: 3,
+				ProductID:   0,
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update an order as Product ID does not exist",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
+			},
+			RequestBody: models.Order{
+				OrderRef:    "TestIDExists",
+				OrderAmount: 3,
+				ProductID:   99999999,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
@@ -231,7 +386,6 @@ func TestDeleteOrder(t *testing.T) {
 		OrderRef:    "TESTREF",
 		OrderAmount: 15,
 		ProductID:   1,
-		OrderPrice:  1200,
 	}
 	ts.S.Database.Create(order)
 

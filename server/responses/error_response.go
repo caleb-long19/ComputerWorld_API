@@ -2,43 +2,40 @@ package responses
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 )
 
-func ErrorResponse(context echo.Context, code int, err error) error {
-	// Set the status code for the response
-	if context != nil {
-		context.Response().WriteHeader(code)
-	}
-
-	// Standard error structure
-	errorResponse := map[string]interface{}{
-		"status": code,
-		"error":  err.Error(),
-	}
-
-	// If context is present, return the JSON response
-	if context != nil {
-		return context.JSON(code, errorResponse)
-	}
-
-	// Return the error for testing or other non-echo purposes
-	return echo.NewHTTPError(code, errorResponse)
-}
-
+// HTTPError is a custom error type that holds a status code and an error message
 type HTTPError struct {
 	StatusCode int
 	Message    string
 }
 
-// Implement the error interface
+// Error allows HTTPError to satisfy the error interface
 func (e *HTTPError) Error() string {
-	return fmt.Sprintf("status %d: %s", e.StatusCode, e.Message)
+	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
-func NewHTTPError(statusCode int, message string) error {
+// NewHTTPError creates a new instance of HTTPError
+func NewHTTPError(statusCode int, message string) *HTTPError {
 	return &HTTPError{
 		StatusCode: statusCode,
 		Message:    message,
 	}
+}
+
+// ErrorResponse formats and sends an error response with a custom status code using Echo
+func ErrorResponse(c echo.Context, statusCode int, err error) error {
+	return c.JSON(statusCode, map[string]string{
+		"error": err.Error(),
+	})
+}
+
+// SuccessResponse sends a success message back to the client using Echo
+func SuccessResponse(c echo.Context, message string) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": message,
+	})
 }

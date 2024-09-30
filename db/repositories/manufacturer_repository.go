@@ -2,18 +2,20 @@ package repositories
 
 import (
 	"ComputerWorld_API/db/models"
+	"ComputerWorld_API/server/responses"
 	"errors"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
-	"log"
+	"net/http"
 	"regexp"
 )
 
 type ManufacturerInterface interface {
-	Create(manufacturer *models.Manufacturer) error
+	Create(manufacturer *models.Manufacturer, c echo.Context) error
 	Get(id interface{}) (*models.Manufacturer, error)
 	GetAll() ([]*models.Manufacturer, error)
-	Update(manufacturer *models.Manufacturer) error
+	Update(manufacturer *models.Manufacturer, c echo.Context) error
 	Delete(id interface{}) error
 }
 
@@ -25,15 +27,25 @@ func NewManufacturerRepository(db *gorm.DB) *ManufacturerRepository {
 	return &ManufacturerRepository{DB: db}
 }
 
-func (repo *ManufacturerRepository) Create(manufacturer *models.Manufacturer) error {
-	// Validate Manufacturer
+func (repo *ManufacturerRepository) Create(manufacturer *models.Manufacturer, c echo.Context) error {
+	// Validate inputs
 	err := validateManufacturerInputs(repo.DB, manufacturer)
 	if err != nil {
+		// Check if it's an HTTPError and use the correct status code and message
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return c.JSON(httpErr.StatusCode, httpErr.Message)
+		}
 		return err
 	}
 
-	// Create the manufacturer
-	return repo.DB.Create(manufacturer).Error
+	// Proceed with creating the manufacturer if validation passes
+	if err := repo.DB.Create(manufacturer).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, "could not create manufacturer")
+	}
+
+	// Return 201 Created if the manufacturer is successfully created
+	return c.JSON(http.StatusCreated, manufacturer)
 }
 
 func (repo *ManufacturerRepository) Get(id interface{}) (*models.Manufacturer, error) {
@@ -52,14 +64,23 @@ func (repo *ManufacturerRepository) GetAll() ([]*models.Manufacturer, error) {
 	return manufacturers, nil
 }
 
-func (repo *ManufacturerRepository) Update(manufacturer *models.Manufacturer) error {
-	// Validate Manufacturer
+func (repo *ManufacturerRepository) Update(manufacturer *models.Manufacturer, c echo.Context) error {
+	// Validate inputs
 	err := validateManufacturerInputs(repo.DB, manufacturer)
 	if err != nil {
+		// Check if it's an HTTPError and use the correct status code and message
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return c.JSON(httpErr.StatusCode, httpErr.Message)
+		}
 		return err
 	}
 
-	return repo.DB.Save(manufacturer).Error
+	if err := repo.DB.Save(manufacturer).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, "could not update manufacturer")
+	}
+
+	return c.JSON(http.StatusCreated, manufacturer)
 }
 
 func (repo *ManufacturerRepository) Delete(id interface{}) error {
@@ -77,26 +98,30 @@ func validateManufacturerInputs(db *gorm.DB, manufacturer *models.Manufacturer) 
 	// Check if manufacturer exists
 	exists, err := manufacturerExists(db, manufacturer)
 	if err != nil {
-		return errors.New("error: An error occurred while checking manufacturer existence")
+		return responses.NewHTTPError(http.StatusInternalServerError, "an error occurred while checking manufacturer existence")
 	}
 	if exists {
-		log.Println("CONSOLE: LINE 73: ALREADY EXISTS:", exists)
-		return errors.New("error: A manufacturer with this name already exists")
+		return responses.NewHTTPError(http.StatusConflict, "A manufacturer with this name already exists")
 	}
 
-	// Validate input
-	if !isValidManufacturerInput(manufacturer) {
-		return errors.New("error: Manufacturer name is invalid")
+	// Validate manufacturer input
+	errVI := isValidManufacturerInput(manufacturer)
+	if errVI != nil {
+		return errVI // Return the validation error if inputs are invalid
 	}
 
 	return err
 }
 
-func isValidManufacturerInput(manufacturer *models.Manufacturer) bool {
+func isValidManufacturerInput(manufacturer *models.Manufacturer) error {
 	// Allow only letters
-	validNamePattern := `^[a-zA-Z\s]`
-	matched, _ := regexp.MatchString(validNamePattern, manufacturer.ManufacturerName)
-	return matched
+	validNamePattern := `^[a-zA-Z0-9\s]+$`
+	matchedName, _ := regexp.MatchString(validNamePattern, manufacturer.ManufacturerName)
+	if !matchedName {
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Manufacturer Name is invalid : No Special Characters")
+	}
+
+	return nil
 }
 
 func manufacturerExists(db *gorm.DB, manufacturer *models.Manufacturer) (bool, error) {
@@ -107,7 +132,7 @@ func manufacturerExists(db *gorm.DB, manufacturer *models.Manufacturer) (bool, e
 			// Manufacturer not found, return false
 			return false, nil
 		}
-		return false, err
+		return false, responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
 	}
 	// Manufacturer found, return true
 	return true, nil

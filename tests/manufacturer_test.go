@@ -16,6 +16,11 @@ func TestPostManufacturer(t *testing.T) {
 		Url:    "/manufacturer/",
 	}
 
+	mf := &models.Manufacturer{
+		ManufacturerName: "Microsoft",
+	}
+	ts.S.Database.Create(mf)
+
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can create a manufacturer",
@@ -24,11 +29,11 @@ func TestPostManufacturer(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Manufacturer{
-				ManufacturerName: "Microsoft",
+				ManufacturerName: "Wacom",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
-				BodyParts:  []string{`"manufacturer_name":"Microsoft"`},
+				BodyParts:  []string{`"manufacturer_name":"Wacom"`},
 			},
 		},
 		{
@@ -45,6 +50,19 @@ func TestPostManufacturer(t *testing.T) {
 			},
 		},
 		{
+			TestName: "Cannot create manufacturer as the name exceeds the maximum length!",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "Super Amazing Microsoft Dream Team",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
+			},
+		},
+		{
 			TestName: "Cannot create manufacturer as no name was given",
 			Request: helpers.Request{
 				Method: request.Method,
@@ -52,7 +70,33 @@ func TestPostManufacturer(t *testing.T) {
 			},
 			RequestBody: models.Manufacturer{},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot create manufacturer as name was left blank",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot create manufacturer as name contains special characters",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    request.Url,
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "Test####@",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
 			},
 		},
 		{
@@ -65,7 +109,7 @@ func TestPostManufacturer(t *testing.T) {
 				ManufacturerID: 1,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusNotAcceptable,
 			},
 		},
 	}
@@ -106,16 +150,6 @@ func TestGetManufacturer(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot retrieve manufacturer by ID",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, 10000),
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotFound,
-			},
-		},
-		{
 			TestName: "Can retrieve manufacturer by ID as a string was given",
 			Request: helpers.Request{
 				Method: request.Method,
@@ -123,6 +157,16 @@ func TestGetManufacturer(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
+			},
+		},
+		{
+			TestName: "Cannot retrieve manufacturer by ID",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, 10000),
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotFound,
 			},
 		},
 	}
@@ -157,8 +201,72 @@ func TestPutManufacturer(t *testing.T) {
 				ManufacturerName: "Akira",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusOK,
+				StatusCode: http.StatusCreated,
 				BodyParts:  []string{fmt.Sprintf(`"manufacturer_name":"Akira"`)},
+			},
+		},
+		{
+			TestName: "Can update Manufacturer by ID and include numbers in the name",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "AkiraTest123",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusCreated,
+				BodyParts:  []string{fmt.Sprintf(`"manufacturer_name":"AkiraTest123"`)},
+			},
+		},
+		{
+			TestName: "Cannot update manufacturer as no body was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+			},
+			RequestBody: models.Manufacturer{},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update manufacturer as no name was given",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update manufacturer as name was special characters",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "MicrosoftTest#####",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusNotAcceptable,
+			},
+		},
+		{
+			TestName: "Cannot update manufacturer as name exceeded maximum length",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+			},
+			RequestBody: models.Manufacturer{
+				ManufacturerName: "MicrosoftTestingToMakeSureTheLengthIsNotTooMuch",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusLengthRequired,
 			},
 		},
 		{
