@@ -6,6 +6,7 @@ import (
 	"ComputerWorld_API/server/requests"
 	"ComputerWorld_API/server/responses"
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -15,21 +16,45 @@ type ProductController struct {
 }
 
 func (pc *ProductController) Create(c echo.Context) error {
+	// Bind request body to the ProductRequest struct
 	requestProduct := new(requests.ProductRequest)
 
 	if err := c.Bind(&requestProduct); err != nil {
-		return c.JSON(http.StatusBadRequest, requestProduct)
-	}
-	product, err := pc.validateProductRequest(requestProduct)
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, err)
+		// Return bad request if binding fails
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind product data"))
 	}
 
+	// Call the validation method
+	_, err := pc.validateProductRequest(requestProduct)
+	if err != nil {
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			// Return the exact status code and message from validation
+			return c.JSON(httpErr.StatusCode, echo.Map{
+				"error": httpErr.Message,
+			})
+		}
+		// If the error is not a custom HTTPError, return a generic bad request
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("product validation failed: %v", err))
+	}
+
+	// Map the validated request data to the product model
+	product := &models.Product{
+		ProductCode:    requestProduct.ProductCode,
+		ProductName:    requestProduct.ProductName,
+		ManufacturerID: requestProduct.ManufacturerID,
+		Stock:          requestProduct.ProductStock,
+		Price:          requestProduct.ProductPrice,
+	}
+
+	// Call repository method to create the new product
 	err = pc.ProductRepository.Create(product, c)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusConflict, err)
+		// Return conflict if product creation fails
+		return responses.ErrorResponse(c, http.StatusConflict, fmt.Errorf("failed to create product: %v", err))
 	}
 
+	// Return success response with the created product
 	return c.JSON(http.StatusCreated, product)
 }
 
@@ -51,38 +76,48 @@ func (pc *ProductController) GetAll(c echo.Context) error {
 }
 
 func (pc *ProductController) Update(c echo.Context) error {
+	// Get the existing product by ID
 	existingProduct, err := pc.ProductRepository.Get(c.Param("id"))
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
+		return responses.ErrorResponse(c, http.StatusNotFound, fmt.Errorf("product not found: %v", err))
 	}
 
+	// Bind the incoming request to the ProductRequest struct
 	var updateProduct = new(requests.ProductRequest)
 	if err := c.Bind(updateProduct); err != nil {
-		return c.JSON(http.StatusBadRequest, "Error: Could not bind product")
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind product data"))
 	}
 
+	// Validate the incoming product data
 	if updateProduct == nil {
-		return c.JSON(http.StatusBadRequest, updateProduct)
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid product data"))
 	}
+
 	_, err = pc.validateProductRequest(updateProduct)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, err)
+		// Check if the error is of type HTTPError and use the proper status code
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return responses.ErrorResponse(c, httpErr.StatusCode, httpErr)
+		}
+		// For unexpected validation errors, return a generic bad request
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("product validation failed: %v", err))
 	}
 
-	existingProduct = &models.Product{
-		ProductID:      existingProduct.ProductID,
-		ProductName:    updateProduct.ProductName,
-		ProductCode:    updateProduct.ProductCode,
-		ManufacturerID: updateProduct.ManufacturerID,
-		Stock:          updateProduct.ProductStock,
-		Price:          updateProduct.ProductPrice,
+	// Update the existing product fields with the new values
+	existingProduct.ProductName = updateProduct.ProductName
+	existingProduct.ProductCode = updateProduct.ProductCode
+	existingProduct.ManufacturerID = updateProduct.ManufacturerID
+	existingProduct.Stock = updateProduct.ProductStock
+	existingProduct.Price = updateProduct.ProductPrice
+
+	// Attempt to update the product in the repository
+	if err := pc.ProductRepository.Update(existingProduct, c); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update product: %v", err))
 	}
 
-	if err := pc.ProductRepository.Update(existingProduct); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, err)
-	}
-
-	return c.JSON(http.StatusOK, existingProduct)
+	// Successfully updated, return the updated product data
+	return responses.SuccessResponse(c, "Product updated successfully")
 }
 
 func (pc *ProductController) Delete(c echo.Context) error {
@@ -104,28 +139,28 @@ func (pc *ProductController) validateProductRequest(request *requests.ProductReq
 
 	product := new(models.Product)
 	if request.ProductCode == "" {
-		return nil, errors.New("error: Invalid product code")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product code")
 	}
 	if len(request.ProductCode) < 3 || len(request.ProductCode) > 12 {
-		return nil, errors.New("error: Product code must be between 3 and 12 characters")
+		return nil, responses.NewHTTPError(http.StatusLengthRequired, "Product code must be between 3 and 12 characters")
 	}
 	if request.ProductName == "" {
-		return nil, errors.New("error: Invalid product name")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product name")
 	}
 	if len(request.ProductName) < 3 || len(request.ProductName) > 25 {
-		return nil, errors.New("error: Product name must be between 3 and 25 characters")
+		return nil, responses.NewHTTPError(http.StatusLengthRequired, "Product name must be between 3 and 25 characters")
 	}
 	if request.ManufacturerID <= 0 {
-		return nil, errors.New("error: Invalid manufacturer ID")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid manufacturer ID")
 	}
 	if request.ProductStock < 0 {
-		return nil, errors.New("error: Invalid stock amount")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid stock amount")
 	}
 	if request.ProductStock > 1000 {
-		return nil, errors.New("error: Product stock exceeds maximum limit")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Product stock exceeds maximum limit")
 	}
 	if request.ProductPrice <= 0.0 {
-		return nil, errors.New("error: Invalid product price")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product price")
 	}
 
 	product.ProductCode = request.ProductCode

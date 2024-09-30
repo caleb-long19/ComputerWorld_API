@@ -2,18 +2,21 @@ package repositories
 
 import (
 	"ComputerWorld_API/db/models"
+	"ComputerWorld_API/server/responses"
 	"errors"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
+	"net/http"
 	"regexp"
 	"strconv"
 )
 
 type OrderInterface interface {
-	Create(order *models.Order) error
+	Create(order *models.Order, c echo.Context) error
 	Get(id interface{}) (*models.Order, error)
 	GetAll() ([]*models.Order, error)
-	Update(order *models.Order) error
+	Update(order *models.Order, c echo.Context) error
 	Delete(id interface{}) error
 }
 
@@ -25,9 +28,14 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	return &OrderRepository{DB: db}
 }
 
-func (repo *OrderRepository) Create(order *models.Order) error {
+func (repo *OrderRepository) Create(order *models.Order, c echo.Context) error {
+	// Validate inputs
 	err := validateOrderInputs(repo.DB, order)
 	if err != nil {
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return c.JSON(httpErr.StatusCode, httpErr.Message)
+		}
 		return err
 	}
 
@@ -35,13 +43,16 @@ func (repo *OrderRepository) Create(order *models.Order) error {
 	if errCOP != nil {
 		return errCOP
 	}
-
 	errCPS := CalculateProductStock(repo.DB, order)
 	if errCPS != nil {
 		return errCPS
 	}
 
-	return repo.DB.Create(order).Error
+	if err := repo.DB.Create(order).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, "could not create order")
+	}
+
+	return c.JSON(http.StatusCreated, order)
 }
 
 func (repo *OrderRepository) Get(id interface{}) (*models.Order, error) {
@@ -60,9 +71,14 @@ func (repo *OrderRepository) GetAll() ([]*models.Order, error) {
 	return orders, nil
 }
 
-func (repo *OrderRepository) Update(order *models.Order) error {
+func (repo *OrderRepository) Update(order *models.Order, c echo.Context) error {
+	// Validate inputs
 	err := validateOrderInputs(repo.DB, order)
 	if err != nil {
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return c.JSON(httpErr.StatusCode, httpErr.Message)
+		}
 		return err
 	}
 
@@ -70,13 +86,16 @@ func (repo *OrderRepository) Update(order *models.Order) error {
 	if errCOP != nil {
 		return errCOP
 	}
-
 	errCPS := CalculateProductStock(repo.DB, order)
 	if errCPS != nil {
 		return errCPS
 	}
 
-	return repo.DB.Save(order).Error
+	if err := repo.DB.Save(order).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, "could not update order")
+	}
+
+	return c.JSON(http.StatusCreated, order)
 }
 
 func (repo *OrderRepository) Delete(id interface{}) error {
@@ -99,18 +118,18 @@ func validateOrderInputs(db *gorm.DB, order *models.Order) error {
 	// Check if order exists
 	exists, err := orderExists(db, order)
 	if err != nil {
-		return errors.New("error: An error occurred while checking order existence")
+		return responses.NewHTTPError(http.StatusBadRequest, "An error occurred while checking order existence")
 	}
 	if exists {
-		return errors.New("error: An order with this name already exists")
+		return responses.NewHTTPError(http.StatusConflict, "An order with this name already exists")
 	}
 
 	existProduct, errPE := productIDExists(db, order)
 	if errPE != nil {
-		return errors.New("error: An error occurred while checking product existence")
+		return responses.NewHTTPError(http.StatusBadRequest, "An error occurred while checking product existence")
 	}
 	if !existProduct {
-		return errors.New("error: this product id does not exist")
+		return responses.NewHTTPError(http.StatusNotFound, "this product id does not exist")
 	}
 
 	return nil
@@ -121,21 +140,21 @@ func isValidOrderInput(order *models.Order) error {
 	validNamePattern := `^[a-zA-Z0-9]+$`
 	matchedRef, _ := regexp.MatchString(validNamePattern, order.OrderRef)
 	if !matchedRef {
-		return errors.New("error: Order reference is invalid")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Order reference is invalid : No Special Characters")
 	}
 
 	// Allow only whole numbers for amount
 	validAmountPattern := `^[0-9]+$`
 	matchedAmount, _ := regexp.MatchString(validAmountPattern, strconv.Itoa(order.OrderAmount))
 	if !matchedAmount {
-		return errors.New("error: Order amount is invalid")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Order amount is invalid : No Special Characters or Letters")
 	}
 
 	// Allow only whole numbers for product ID
 	validIDPattern := `^[0-9]+$`
 	matchedID, _ := regexp.MatchString(validIDPattern, strconv.Itoa(order.ProductID))
 	if !matchedID {
-		return errors.New("error: Product ID is invalid")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Product ID is invalid : No Special Characters or Letters")
 	}
 
 	return nil
@@ -149,7 +168,7 @@ func orderExists(db *gorm.DB, order *models.Order) (bool, error) {
 			// Order not found, return false
 			return false, nil
 		}
-		return false, err
+		return false, responses.NewHTTPError(http.StatusInternalServerError, "Internal server error: Try again!")
 	}
 	// Order found, return true
 	return true, nil
@@ -163,7 +182,7 @@ func productIDExists(db *gorm.DB, order *models.Order) (bool, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
-		return false, err
+		return false, responses.NewHTTPError(http.StatusInternalServerError, "Internal server error: Try again!")
 	}
 	// product id found
 	return true, nil
@@ -189,7 +208,7 @@ func CalculateProductStock(db *gorm.DB, order *models.Order) error {
 
 	// Check if there's enough stock to fulfill the order
 	if product.Stock < order.OrderAmount {
-		return errors.New("insufficient stock for the product")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "insufficient stock for the product")
 	}
 
 	product.Stock -= order.OrderAmount

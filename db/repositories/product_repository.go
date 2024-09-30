@@ -16,7 +16,7 @@ type ProductInterface interface {
 	Create(product *models.Product, c echo.Context) error
 	Get(id interface{}) (*models.Product, error)
 	GetAll() ([]*models.Product, error)
-	Update(product *models.Product) error
+	Update(product *models.Product, c echo.Context) error
 	Delete(id interface{}) error
 }
 
@@ -42,7 +42,7 @@ func (repo *ProductRepository) Create(product *models.Product, c echo.Context) e
 
 	// Proceed with creating the product if validation passes
 	if err := repo.DB.Create(product).Error; err != nil {
-		return c.JSON(http.StatusBadRequest, "error: could not create product")
+		return c.JSON(http.StatusBadRequest, "could not create product")
 	}
 
 	// Return 201 Created if the product is successfully created
@@ -65,13 +65,25 @@ func (repo *ProductRepository) GetAll() ([]*models.Product, error) {
 	return products, nil
 }
 
-func (repo *ProductRepository) Update(product *models.Product) error {
+func (repo *ProductRepository) Update(product *models.Product, c echo.Context) error {
+	// Validate inputs
 	err := validateProductInputs(repo.DB, product)
 	if err != nil {
-		return err
+		// Check if it's an HTTPError and use the correct status code and message
+		var httpErr *responses.HTTPError
+		if errors.As(err, &httpErr) {
+			return c.JSON(httpErr.StatusCode, httpErr.Message)
+		}
+		return err // Return the error if product check fails
 	}
 
-	return repo.DB.Save(product).Error
+	// Proceed with creating the product if validation passes
+	if err := repo.DB.Save(product).Error; err != nil {
+		return c.JSON(http.StatusBadRequest, "could not update product")
+	}
+
+	// Return 201 Created if the product is successfully updated
+	return c.JSON(http.StatusCreated, product)
 }
 
 func (repo *ProductRepository) Delete(id interface{}) error {
@@ -95,7 +107,7 @@ func validateProductInputs(db *gorm.DB, product *models.Product) error {
 	// Check if the product exists
 	exists, err := productExists(db, product)
 	if err != nil {
-		return err // Return the error if product check fails
+		return responses.NewHTTPError(http.StatusBadRequest, "an error occurred while checking product existence")
 	}
 	if exists {
 		return responses.NewHTTPError(http.StatusConflict, "A product with this code or name already exists")
@@ -119,35 +131,35 @@ func isValidProductInput(product *models.Product) error {
 	validCodePattern := `^[a-zA-Z0-9]+$`
 	matchedCode, _ := regexp.MatchString(validCodePattern, product.ProductCode)
 	if !matchedCode {
-		return errors.New("error: Product code is invalid : No Special Characters")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Product code is invalid : No Special Characters")
 	}
 
 	// Allow only letters for product name
 	validNamePattern := `^[a-zA-Z0-9\s]+$`
 	matchedName, _ := regexp.MatchString(validNamePattern, product.ProductName)
 	if !matchedName {
-		return responses.NewHTTPError(http.StatusBadRequest, "error: Product name is invalid : No Special Characters")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Product name is invalid : No Special Characters")
 	}
 
 	// Allow only whole numbers for manufacturer id
 	validIDPattern := `^[0-9]+$`
 	matchedID, _ := regexp.MatchString(validIDPattern, strconv.Itoa(product.ManufacturerID))
 	if !matchedID {
-		return responses.NewHTTPError(http.StatusBadRequest, "error: Manufacturer ID is invalid : No Special Characters or Letters")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Manufacturer ID is invalid : No Special Characters or Letters")
 	}
 
 	// Allow only whole numbers for stock
 	validStockPattern := `^[0-9]+$`
 	matchedStock, _ := regexp.MatchString(validStockPattern, strconv.Itoa(product.Stock))
 	if !matchedStock {
-		return responses.NewHTTPError(http.StatusBadRequest, "error: Stock is invalid : No Special Characters or Letters")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Stock is invalid : No Special Characters or Letters")
 	}
 
 	// Allow only numbers for price
 	validPricePattern := `^\d+(\.\d{1,2})?$`
 	matchedPrice, _ := regexp.MatchString(validPricePattern, strconv.FormatFloat(product.Price, 'f', -1, 64))
 	if !matchedPrice {
-		return responses.NewHTTPError(http.StatusBadRequest, "error: Price is invalid : No Special Characters or Letters")
+		return responses.NewHTTPError(http.StatusNotAcceptable, "Price is invalid : No Special Characters or Letters")
 	}
 
 	return nil
@@ -164,7 +176,7 @@ func productExists(db *gorm.DB, product *models.Product) (bool, error) {
 		return false, responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
 	}
 	// Product found - does exist
-	return true, responses.NewHTTPError(http.StatusConflict, "Product Already Exists")
+	return true, nil
 }
 
 func manufacturerIDExists(db *gorm.DB, product *models.Product) (bool, error) {
@@ -173,7 +185,7 @@ func manufacturerIDExists(db *gorm.DB, product *models.Product) (bool, error) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Manufacturer does not exist
-			return false, responses.NewHTTPError(http.StatusNotFound, "manufacturer ID not found")
+			return false, nil
 		}
 		return false, responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
 	}
