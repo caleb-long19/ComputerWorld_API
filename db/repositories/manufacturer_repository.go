@@ -39,13 +39,7 @@ func (repo *ManufacturerRepository) Create(manufacturer *models.Manufacturer, c 
 		return err
 	}
 
-	// Proceed with creating the manufacturer if validation passes
-	if err := repo.DB.Create(manufacturer).Error; err != nil {
-		return c.JSON(http.StatusBadRequest, "could not create manufacturer")
-	}
-
-	// Return 201 Created if the manufacturer is successfully created
-	return c.JSON(http.StatusCreated, manufacturer)
+	return repo.DB.Create(manufacturer).Error
 }
 
 func (repo *ManufacturerRepository) Get(id interface{}) (*models.Manufacturer, error) {
@@ -80,7 +74,7 @@ func (repo *ManufacturerRepository) Update(manufacturer *models.Manufacturer, c 
 		return c.JSON(http.StatusBadRequest, "could not update manufacturer")
 	}
 
-	return c.JSON(http.StatusCreated, manufacturer)
+	return repo.DB.Save(manufacturer).Error
 }
 
 func (repo *ManufacturerRepository) Delete(id interface{}) error {

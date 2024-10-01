@@ -117,7 +117,7 @@ func (oc *OrderController) Update(c echo.Context) error {
 	}
 
 	// Successfully updated, return the updated order data
-	return responses.SuccessResponse(c, "Order updated successfully")
+	return c.JSON(http.StatusCreated, existingOrder)
 }
 
 func (oc *OrderController) Delete(c echo.Context) error {

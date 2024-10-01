@@ -48,11 +48,7 @@ func (repo *OrderRepository) Create(order *models.Order, c echo.Context) error {
 		return errCPS
 	}
 
-	if err := repo.DB.Create(order).Error; err != nil {
-		return c.JSON(http.StatusBadRequest, "could not create order")
-	}
-
-	return c.JSON(http.StatusCreated, order)
+	return repo.DB.Create(order).Error
 }
 
 func (repo *OrderRepository) Get(id interface{}) (*models.Order, error) {
@@ -60,6 +56,7 @@ func (repo *OrderRepository) Get(id interface{}) (*models.Order, error) {
 	if err := repo.DB.Where("order_id = ?", id).First(&order).Error; err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not find order with id %v", id))
 	}
+	fmt.Println("Updating order with ID:", order.OrderID)
 	return &order, nil
 }
 
@@ -72,6 +69,9 @@ func (repo *OrderRepository) GetAll() ([]*models.Order, error) {
 }
 
 func (repo *OrderRepository) Update(order *models.Order, c echo.Context) error {
+
+	fmt.Println("Updating order with ID:", order.OrderID)
+
 	// Validate inputs
 	err := validateOrderInputs(repo.DB, order)
 	if err != nil {
@@ -91,11 +91,13 @@ func (repo *OrderRepository) Update(order *models.Order, c echo.Context) error {
 		return errCPS
 	}
 
+	fmt.Println("Updating order with ID:", order.OrderID)
+
 	if err := repo.DB.Save(order).Error; err != nil {
 		return c.JSON(http.StatusBadRequest, "could not update order")
 	}
 
-	return c.JSON(http.StatusCreated, order)
+	return repo.DB.Save(order).Error
 }
 
 func (repo *OrderRepository) Delete(id interface{}) error {
