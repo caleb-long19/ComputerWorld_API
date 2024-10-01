@@ -37,7 +37,6 @@ func (pc *ProductController) Create(c echo.Context) error {
 		// If the error is not a custom HTTPError, return a generic bad request
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("product validation failed: %v", err))
 	}
-
 	// Map the validated request data to the product model
 	product := &models.Product{
 		ProductCode:    requestProduct.ProductCode,
@@ -116,8 +115,7 @@ func (pc *ProductController) Update(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update product: %v", err))
 	}
 
-	// Successfully updated, return the updated product data
-	return responses.SuccessResponse(c, "Product updated successfully")
+	return c.JSON(http.StatusCreated, existingProduct)
 }
 
 func (pc *ProductController) Delete(c echo.Context) error {

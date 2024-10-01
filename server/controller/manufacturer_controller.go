@@ -38,7 +38,7 @@ func (mc *ManufacturerController) Create(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("manufacturer validation failed: %v", err))
 	}
 
-	// Map the validated request data to the manufacturer model
+	// Map the validated request data to the product model
 	manufacturer := &models.Manufacturer{
 		ManufacturerName: requestManufacturer.ManufacturerName,
 	}
@@ -102,7 +102,7 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update manufacturer: %v", err))
 	}
 
-	return responses.SuccessResponse(c, "Manufacturer updated successfully")
+	return c.JSON(http.StatusCreated, existingManufacturer)
 }
 
 func (mc *ManufacturerController) Delete(c echo.Context) error {

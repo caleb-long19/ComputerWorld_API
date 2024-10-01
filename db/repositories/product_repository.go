@@ -40,13 +40,7 @@ func (repo *ProductRepository) Create(product *models.Product, c echo.Context) e
 		return err // Return the error if product check fails
 	}
 
-	// Proceed with creating the product if validation passes
-	if err := repo.DB.Create(product).Error; err != nil {
-		return c.JSON(http.StatusBadRequest, "could not create product")
-	}
-
-	// Return 201 Created if the product is successfully created
-	return c.JSON(http.StatusCreated, product)
+	return repo.DB.Create(product).Error
 }
 
 func (repo *ProductRepository) Get(id interface{}) (*models.Product, error) {
@@ -83,7 +77,7 @@ func (repo *ProductRepository) Update(product *models.Product, c echo.Context) e
 	}
 
 	// Return 201 Created if the product is successfully updated
-	return c.JSON(http.StatusCreated, product)
+	return repo.DB.Save(product).Error
 }
 
 func (repo *ProductRepository) Delete(id interface{}) error {
@@ -94,7 +88,7 @@ func (repo *ProductRepository) Delete(id interface{}) error {
 	return repo.DB.Delete(models.Product{}, "product_id = ?", id).Error
 }
 
-// Validation Methods >>>
+// Validation & Helpers >>>
 // Validation contains checking inputs follow a format, checking if duplicates exist, checking if foreign keys exist
 
 func validateProductInputs(db *gorm.DB, product *models.Product) error {
@@ -104,13 +98,27 @@ func validateProductInputs(db *gorm.DB, product *models.Product) error {
 		return errVI // Return the validation error if inputs are invalid
 	}
 
-	// Check if the product exists
-	exists, err := productExists(db, product)
+	// Check if the product code or name has changed
+	changed, err := hasProductChanged(db, product)
 	if err != nil {
-		return responses.NewHTTPError(http.StatusBadRequest, "an error occurred while checking product existence")
+		return err
 	}
-	if exists {
-		return responses.NewHTTPError(http.StatusConflict, "A product with this code or name already exists")
+	if changed {
+		// If the product code or name has changed, run the duplicate check
+		duplicateField, err := productExists(db, product)
+		if err != nil {
+			// Return an internal server error if the check fails
+			return responses.NewHTTPError(http.StatusInternalServerError, "an error occurred while checking product existence")
+		}
+		if duplicateField != "" {
+			// If there's a duplicate, respond
+			if duplicateField == "product_code" {
+				return responses.NewHTTPError(http.StatusConflict, "A product with this code already exists")
+			}
+			if duplicateField == "product_name" {
+				return responses.NewHTTPError(http.StatusConflict, "A product with this name already exists")
+			}
+		}
 	}
 
 	// Check if manufacturer exists
@@ -165,18 +173,51 @@ func isValidProductInput(product *models.Product) error {
 	return nil
 }
 
-func productExists(db *gorm.DB, product *models.Product) (bool, error) {
-	// Attempt to find the product name or code in the database
-	err := db.Where("product_code = ?", product.ProductCode).Or(db.Where("product_name = ?", product.ProductName)).First(&product).Error
+func hasProductChanged(db *gorm.DB, product *models.Product) (bool, error) {
+	// Fetch the existing product from the database
+	var existingProduct models.Product
+	err := db.First(&existingProduct).Error
 	if err != nil {
+		// Return error if the product is not found or if there's an issue
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Product not found - does not exist
-			return false, nil
+			return false, responses.NewHTTPError(http.StatusNotFound, "Product not found")
 		}
-		return false, responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
+		return false, responses.NewHTTPError(http.StatusInternalServerError, "an error occurred while fetching the product")
 	}
-	// Product found - does exist
-	return true, nil
+
+	// Check if the product code or name has changed
+	if product.ProductCode != existingProduct.ProductCode || product.ProductName != existingProduct.ProductName {
+		return true, nil // Product code or name has changed
+	}
+
+	return false, nil // No change in product code or name
+}
+
+func productExists(db *gorm.DB, product *models.Product) (string, error) {
+	// Check if the product code already exists
+	var productWithCode models.Product
+	err := db.Where("product_code = ?", product.ProductCode).First(&productWithCode).Error
+	if err == nil {
+		// Product code exists
+		return "product_code", nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
+	}
+
+	// Check if the product name already exists
+	var productWithName models.Product
+	err = db.Where("product_name = ?", product.ProductName).First(&productWithName).Error
+	if err == nil {
+		// Product name exists
+		return "product_name", nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", responses.NewHTTPError(http.StatusInternalServerError, "internal server error")
+	}
+
+	// Neither product code nor product name exists
+	return "", nil
 }
 
 func manufacturerIDExists(db *gorm.DB, product *models.Product) (bool, error) {
