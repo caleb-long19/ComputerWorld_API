@@ -16,42 +16,26 @@ type ManufacturerController struct {
 }
 
 func (mc *ManufacturerController) Create(c echo.Context) error {
-	// Bind request body to the ManufacturerRequest struct
 	requestManufacturer := new(requests.ManufacturerRequest)
 
 	if err := c.Bind(&requestManufacturer); err != nil {
-		// Return bad request if binding fails
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind product data"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind manufacturer data"))
 	}
 
-	// Call the validation method
-	_, err := mc.validateManufacturerRequest(requestManufacturer)
-	if err != nil {
-		var httpErr *responses.HTTPError
-		if errors.As(err, &httpErr) {
-			// Return the exact status code and message from validation
-			return c.JSON(httpErr.StatusCode, echo.Map{
-				"error": httpErr.Message,
-			})
-		}
-		// If the error is not a custom HTTPError, return a generic bad request
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("manufacturer validation failed: %v", err))
-	}
-
-	// Map the validated request data to the product model
-	manufacturer := &models.Manufacturer{
-		ManufacturerName: requestManufacturer.ManufacturerName,
+	// Validate the request manufacturer data
+	validatedRequest, errV := ValidateManufacturerRequest(requestManufacturer)
+	if errV != nil {
+		// Return the validation error directly
+		return responses.ErrorResponse(c, 0, errV)
 	}
 
 	// Call repository method to create the new manufacturer
-	err = mc.ManufacturerRepository.Create(manufacturer, c)
+	err := mc.ManufacturerRepository.Create(validatedRequest)
 	if err != nil {
-		// Return conflict if manufacturer creation fails
-		return responses.ErrorResponse(c, http.StatusConflict, fmt.Errorf("failed to create product: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("failed to create manufacturer: %v", err))
 	}
 
-	// Return success response with the created manufacturer
-	return c.JSON(http.StatusCreated, manufacturer)
+	return c.JSON(http.StatusCreated, validatedRequest)
 }
 
 func (mc *ManufacturerController) Get(c echo.Context) error {
@@ -81,24 +65,20 @@ func (mc *ManufacturerController) Update(c echo.Context) error {
 	if err := c.Bind(updateManufacturer); err != nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind manufacturer data"))
 	}
-
 	if updateManufacturer == nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid manufacturer data"))
 	}
 
-	// Validate the incoming manufacturer data
-	_, err = mc.validateManufacturerRequest(updateManufacturer)
-	if err != nil {
-		var httpErr *responses.HTTPError
-		if errors.As(err, &httpErr) {
-			return responses.ErrorResponse(c, httpErr.StatusCode, httpErr)
-		}
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("manufacturer validation failed: %v", err))
+	// Validate the request manufacturer data
+	validatedExistingManufacturer, errV := ValidateManufacturerRequest(updateManufacturer)
+	if errV != nil {
+		// Return the validation error directly
+		return responses.ErrorResponse(c, 0, errV)
 	}
 
-	existingManufacturer.ManufacturerName = updateManufacturer.ManufacturerName
+	existingManufacturer.ManufacturerName = validatedExistingManufacturer.ManufacturerName
 
-	if err := mc.ManufacturerRepository.Update(existingManufacturer, c); err != nil {
+	if err := mc.ManufacturerRepository.Update(existingManufacturer); err != nil {
 		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update manufacturer: %v", err))
 	}
 
@@ -114,23 +94,26 @@ func (mc *ManufacturerController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
 }
 
-// Validation Methods >>>
-// Simple validation methods to prevent incorrect values from being requested >>>
-
-func (mc *ManufacturerController) validateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
+// ValidateManufacturerRequest validates the input request for creating or updating a manufacturer.
+func ValidateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
 
 	manufacturer := new(models.Manufacturer)
 	if request.ManufacturerName == "" {
-		return nil, responses.NewHTTPError(http.StatusNotAcceptable, "invalid manufacturer name")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "manufacturer name is required")
 	}
 	if len(request.ManufacturerName) < 1 || len(request.ManufacturerName) > 25 {
-		return nil, responses.NewHTTPError(http.StatusLengthRequired, "manufacturer name must be between 1 and 25 characters")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "manufacturer name must be between 1 and 25 characters")
 	}
 
 	manufacturer.ManufacturerName = request.ManufacturerName
+
+	err := requests.ValidateManufacturerInputs(manufacturer)
+	if err != nil {
+		return nil, err
+	}
 
 	return manufacturer, nil
 }
