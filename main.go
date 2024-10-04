@@ -16,7 +16,7 @@ func main() {
 		AllowOrigins:     []string{"*"}, // Front-end origin
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		AllowCredentials: true, // Enable if you need cookies, etc.
+		AllowCredentials: false,
 	}))
 
 	err := app.Start("5000")

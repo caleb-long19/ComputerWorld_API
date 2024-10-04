@@ -2,8 +2,6 @@ package responses
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,16 +24,11 @@ func NewHTTPError(statusCode int, message string) *HTTPError {
 	}
 }
 
-// ErrorResponse formats and sends an error response with a custom status code using Echo
+// ErrorResponse sends a formatted JSON error response
 func ErrorResponse(c echo.Context, statusCode int, err error) error {
-	return c.JSON(statusCode, map[string]string{
-		"error": err.Error(),
-	})
-}
-
-// SuccessResponse sends a success message back to the client using Echo
-func SuccessResponse(c echo.Context, message string) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": message,
-	})
+	if httpErr, ok := err.(*HTTPError); ok {
+		// Send error with the custom HTTP status code
+		return c.JSON(httpErr.StatusCode, httpErr)
+	}
+	return c.JSON(statusCode, map[string]string{"message": err.Error()})
 }

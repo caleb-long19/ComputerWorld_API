@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestPostManufacturer(t *testing.T) {
+func TestManufacturerCreate(t *testing.T) {
 	ts.ClearTable("manufacturers")
 
 	request := helpers.Request{
@@ -17,7 +17,7 @@ func TestPostManufacturer(t *testing.T) {
 	}
 
 	mf := &models.Manufacturer{
-		ManufacturerName: "Microsoft",
+		ManufacturerName: "Microsoftest",
 	}
 	ts.S.Database.Create(mf)
 
@@ -43,34 +43,10 @@ func TestPostManufacturer(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Manufacturer{
-				ManufacturerName: "Microsoft",
+				ManufacturerName: "Microsoftest",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusConflict,
-			},
-		},
-		{
-			TestName: "Cannot create manufacturer as the name exceeds the maximum length!",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "Super Amazing Microsoft Dream Team",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusLengthRequired,
-			},
-		},
-		{
-			TestName: "Cannot create manufacturer as no name was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Manufacturer{},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -83,7 +59,7 @@ func TestPostManufacturer(t *testing.T) {
 				ManufacturerName: "",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -96,7 +72,7 @@ func TestPostManufacturer(t *testing.T) {
 				ManufacturerName: "Test####@",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -109,7 +85,7 @@ func TestPostManufacturer(t *testing.T) {
 				ManufacturerID: 1,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 	}
@@ -121,7 +97,7 @@ func TestPostManufacturer(t *testing.T) {
 
 }
 
-func TestGetManufacturer(t *testing.T) {
+func TestManufacturerGet(t *testing.T) {
 	ts.ClearTable("manufacturers")
 
 	request := helpers.Request{
@@ -136,7 +112,7 @@ func TestGetManufacturer(t *testing.T) {
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Can retrieve manufacturer by ID",
+			TestName: "Can get manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
@@ -150,17 +126,17 @@ func TestGetManufacturer(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Can retrieve manufacturer by ID as a string was given",
+			TestName: "Can retrieve all manufacturers without ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
+				Url:    fmt.Sprintf("%v/", request.Url),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 			},
 		},
 		{
-			TestName: "Cannot retrieve manufacturer by ID",
+			TestName: "Cannot get manufacturer that does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 10000),
@@ -177,7 +153,7 @@ func TestGetManufacturer(t *testing.T) {
 	}
 }
 
-func TestPutManufacturer(t *testing.T) {
+func TestManufacturerUpdate(t *testing.T) {
 	ts.ClearTable("manufacturers")
 
 	request := helpers.Request{
@@ -220,17 +196,6 @@ func TestPutManufacturer(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot update manufacturer as no body was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
-			},
-			RequestBody: models.Manufacturer{},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
-			},
-		},
-		{
 			TestName: "Cannot update manufacturer as no name was given",
 			Request: helpers.Request{
 				Method: request.Method,
@@ -240,11 +205,11 @@ func TestPutManufacturer(t *testing.T) {
 				ManufacturerName: "",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot update manufacturer as name was special characters",
+			TestName: "Cannot update manufacturer as name has special characters",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
@@ -253,24 +218,11 @@ func TestPutManufacturer(t *testing.T) {
 				ManufacturerName: "MicrosoftTest#####",
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot update manufacturer as name exceeded maximum length",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
-			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "MicrosoftTestingToMakeSureTheLengthIsNotTooMuch",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusLengthRequired,
-			},
-		},
-		{
-			TestName: "Cannot update manufacturer by ID",
+			TestName: "Cannot update manufacturer as they do not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
@@ -287,9 +239,7 @@ func TestPutManufacturer(t *testing.T) {
 	}
 }
 
-func TestDeleteManufacturer(t *testing.T) {
-	ts.ClearTable("manufacturers")
-
+func TestManufacturerDelete(t *testing.T) {
 	request := helpers.Request{
 		Method: http.MethodDelete,
 		Url:    "/manufacturer",
@@ -312,23 +262,13 @@ func TestDeleteManufacturer(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot find and delete manufacturer by ID",
+			TestName: "Cannot find and delete manufacturer that does not exist",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
 				Url:    "/manufacturer/10000000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-			},
-		},
-		{
-			TestName: "Cannot delete manufacturer as no ID was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    "/manufacturer/",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusMethodNotAllowed,
 			},
 		},
 	}

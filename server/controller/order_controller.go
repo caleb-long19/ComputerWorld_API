@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"ComputerWorld_API/db"
 	"ComputerWorld_API/db/models"
 	"ComputerWorld_API/db/repositories"
 	"ComputerWorld_API/server/requests"
@@ -26,36 +27,22 @@ func (oc *OrderController) Create(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind order data"))
 	}
 
-	// Call the validation method
-	_, err := oc.validateOrderRequest(requestOrder)
-	if err != nil {
-		var httpErr *responses.HTTPError
-		if errors.As(err, &httpErr) {
-			// Return the exact status code and message from validation
-			return c.JSON(httpErr.StatusCode, echo.Map{
-				"error": httpErr.Message,
-			})
-		}
-		// If the error is not a custom HTTPError, return a generic bad request
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("order validation failed: %v", err))
-	}
-
-	// Map the validated request data to the product model
-	order := &models.Order{
-		OrderRef:    requestOrder.OrderReference,
-		OrderAmount: requestOrder.OrderAmount,
-		ProductID:   requestOrder.ProductID,
+	// Validate the request manufacturer data
+	validatedRequest, errV := ValidateOrderRequest(requestOrder)
+	if errV != nil {
+		// Return the validation error directly, with its status code
+		return responses.ErrorResponse(c, 0, errV)
 	}
 
 	// Call repository method to create the new product
-	err = oc.OrderRepository.Create(order, c)
+	err := oc.OrderRepository.Create(validatedRequest)
 	if err != nil {
 		// Return conflict if product creation fails
 		return responses.ErrorResponse(c, http.StatusConflict, fmt.Errorf("failed to create order: %v", err))
 	}
 
 	// Return success response with the created product
-	return c.JSON(http.StatusCreated, order)
+	return c.JSON(http.StatusCreated, validatedRequest)
 }
 
 func (oc *OrderController) Get(c echo.Context) error {
@@ -93,26 +80,19 @@ func (oc *OrderController) Update(c echo.Context) error {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid order data"))
 	}
 
-	_, err = oc.validateOrderRequest(updateOrder)
-	if err != nil {
-		// Check if the error is of type HTTPError and use the proper status code
-		var httpErr *responses.HTTPError
-		if errors.As(err, &httpErr) {
-			return responses.ErrorResponse(c, httpErr.StatusCode, httpErr)
-		}
-		// For unexpected validation errors, return a generic bad request
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("order validation failed: %v", err))
+	// Validate the request manufacturer data
+	validatedExistingOrder, errV := ValidateOrderRequest(updateOrder)
+	if errV != nil {
+		// Return the validation error directly
+		return responses.ErrorResponse(c, 0, errV)
 	}
 
-	existingOrder = &models.Order{
-		OrderID:     existingOrder.OrderID,
-		OrderRef:    updateOrder.OrderReference,
-		OrderAmount: updateOrder.OrderAmount,
-		ProductID:   updateOrder.ProductID,
-	}
+	existingOrder.OrderRef = validatedExistingOrder.OrderRef
+	existingOrder.OrderAmount = validatedExistingOrder.OrderAmount
+	existingOrder.ProductID = validatedExistingOrder.ProductID
 
 	// Attempt to update the product in the repository
-	if err := oc.OrderRepository.Update(existingOrder, c); err != nil {
+	if err := oc.OrderRepository.Update(existingOrder); err != nil {
 		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update order: %v", err))
 	}
 
@@ -129,10 +109,7 @@ func (oc *OrderController) Delete(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Order successfully deleted")
 }
 
-// Validation Methods >>>
-// Simple validation methods to prevent incorrect values from being requested
-
-func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) (*models.Order, error) {
+func ValidateOrderRequest(request *requests.OrderRequest) (*models.Order, error) {
 	if request == nil {
 		return nil, errors.New("invalid request body")
 	}
@@ -142,7 +119,7 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid order reference")
 	}
 	if len(request.OrderReference) < 3 || len(request.OrderReference) > 12 {
-		return nil, responses.NewHTTPError(http.StatusLengthRequired, "Order reference must be between 3 and 12 characters")
+		return nil, responses.NewHTTPError(http.StatusBadRequest, "Order reference must be between 3 and 12 characters")
 	}
 	if request.OrderAmount <= 0 {
 		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid order amount")
@@ -158,5 +135,52 @@ func (oc *OrderController) validateOrderRequest(request *requests.OrderRequest) 
 	order.OrderAmount = request.OrderAmount
 	order.ProductID = request.ProductID
 
+	err := requests.ValidateOrderInputs(order)
+	if err != nil {
+		return nil, err
+	}
+
+	errCOP := CalculateOrderPrice(order)
+	if errCOP != nil {
+		return order, errCOP
+	}
+	errCPS := CalculateProductStock(order)
+	if errCPS != nil {
+		return order, errCPS
+	}
+
 	return order, nil
+}
+
+// Calculations >>
+// These are used to automatically calculate the order prices and product stock after creation/updates
+
+func CalculateOrderPrice(order *models.Order) error {
+	var product models.Product
+	if err := db.DatabaseConnection().First(&product, order.ProductID).Error; err != nil {
+		return err
+	}
+	order.OrderPrice = float64(order.OrderAmount) * product.Price
+	return nil
+}
+
+func CalculateProductStock(order *models.Order) error {
+	var product models.Product
+	if err := db.DatabaseConnection().First(&product, order.ProductID).Error; err != nil {
+		return err
+	}
+
+	// Check if there's enough stock to fulfill the order
+	if product.Stock < order.OrderAmount {
+		return responses.NewHTTPError(http.StatusBadRequest, "insufficient stock for the product")
+	}
+
+	product.Stock -= order.OrderAmount
+
+	// Save the updated product stock in the database
+	if err := db.DatabaseConnection().Save(&product).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

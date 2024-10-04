@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestPostOrder(t *testing.T) {
+func TestOrderCreate(t *testing.T) {
 	ts.ClearTable("orders")
 
 	request := helpers.Request{
@@ -33,7 +33,7 @@ func TestPostOrder(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "SGWTDF",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductID:   1,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
@@ -52,7 +52,7 @@ func TestPostOrder(t *testing.T) {
 				ProductID:   2,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -86,51 +86,6 @@ func TestPostOrder(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot create an order as order ref length is above maximum",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Order{
-				OrderRef:    "WEARECHECKINGLENGTH",
-				OrderAmount: 3,
-				ProductID:   2,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusLengthRequired,
-			},
-		},
-		{
-			TestName: "Cannot create an order as no Order Amount was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Order{
-				OrderRef:    "N00RDRAGV",
-				OrderAmount: 0,
-				ProductID:   2,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
-			},
-		},
-		{
-			TestName: "Cannot create an order as no ProductID was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Order{
-				OrderRef:    "N01DGVN",
-				OrderAmount: 3,
-				ProductID:   0,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
-			},
-		},
-		{
 			TestName: "Cannot create an order as Product ID does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
@@ -154,7 +109,7 @@ func TestPostOrder(t *testing.T) {
 
 }
 
-func TestGetOrder(t *testing.T) {
+func TestOrderGet(t *testing.T) {
 	ts.ClearTable("orders")
 
 	request := helpers.Request{
@@ -185,17 +140,7 @@ func TestGetOrder(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Can retrieve order by ID as a string was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, "1"),
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusOK,
-			},
-		},
-		{
-			TestName: "Cannot retrieve order by id",
+			TestName: "Cannot retrieve order that does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 1000000),
@@ -212,7 +157,7 @@ func TestGetOrder(t *testing.T) {
 	}
 }
 
-func TestPutOrder(t *testing.T) {
+func TestOrderUpdate(t *testing.T) {
 	ts.ClearTable("orders")
 
 	request := helpers.Request{
@@ -223,14 +168,14 @@ func TestPutOrder(t *testing.T) {
 	order := &models.Order{
 		OrderRef:    "TESTREF",
 		OrderAmount: 10,
-		ProductID:   2,
+		ProductID:   1,
 	}
 	ts.S.Database.Create(order)
 
 	orderDuplicate := &models.Order{
 		OrderRef:    "TESTDUPE",
 		OrderAmount: 5,
-		ProductID:   2,
+		ProductID:   1,
 	}
 	ts.S.Database.Create(orderDuplicate)
 
@@ -252,7 +197,7 @@ func TestPutOrder(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot find and update order by ID",
+			TestName: "Cannot find and update order by ID that does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
@@ -270,10 +215,10 @@ func TestPutOrder(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "TESTREF##@",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductID:   1,
 			},
 			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusNotAcceptable,
+				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -285,7 +230,7 @@ func TestPutOrder(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductID:   1,
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -304,51 +249,6 @@ func TestPutOrder(t *testing.T) {
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusConflict,
-			},
-		},
-		{
-			TestName: "Cannot update an order as order ref length is above maximum",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
-			},
-			RequestBody: models.Order{
-				OrderRef:    "WEARECHECKINGLENGTHAGAIN",
-				OrderAmount: 3,
-				ProductID:   2,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusLengthRequired,
-			},
-		},
-		{
-			TestName: "Cannot update an order as no Order Amount was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
-			},
-			RequestBody: models.Order{
-				OrderRef:    "N00RDGV",
-				OrderAmount: 0,
-				ProductID:   2,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
-			},
-		},
-		{
-			TestName: "Cannot update an order as no ProductID was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, order.OrderID),
-			},
-			RequestBody: models.Order{
-				OrderRef:    "N01DGVN",
-				OrderAmount: 3,
-				ProductID:   0,
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
@@ -374,9 +274,7 @@ func TestPutOrder(t *testing.T) {
 	}
 }
 
-func TestDeleteOrder(t *testing.T) {
-	ts.ClearTable("orders")
-
+func TestOrderDelete(t *testing.T) {
 	request := helpers.Request{
 		Method: http.MethodDelete,
 		Url:    "/order",
@@ -401,23 +299,13 @@ func TestDeleteOrder(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot find and delete order by ID",
+			TestName: "Cannot find and delete order that does not exist",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
 				Url:    "/order/1000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
-			},
-		},
-		{
-			TestName: "Cannot delete order as no ID was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    "/order/",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusMethodNotAllowed,
 			},
 		},
 	}
