@@ -13,13 +13,19 @@ func ConfigureRoutes(server *server.Server) {
 	mfRepo := repositories.NewManufacturerRepository(server.Database)
 	productRepo := repositories.NewProductRepository(server.Database)
 	orderRepo := repositories.NewOrderRepository(server.Database)
+	userRepo := repositories.NewUserRepository(server.Database)
+	adminRepo := repositories.NewAdminRepository(server.Database)
 	mfController := controller.ManufacturerController{ManufacturerRepository: mfRepo}
 	pdController := controller.ProductController{ProductRepository: productRepo}
 	odController := controller.OrderController{OrderRepository: orderRepo}
+	userController := controller.UserController{UserRepository: userRepo}
+	adminController := controller.AdminController{AdminRepository: adminRepo}
 
 	manufacturerRoute := server.Echo.Group("/manufacturer")
 	productRoute := server.Echo.Group("/product")
 	orderRoute := server.Echo.Group("/order")
+	userRoute := server.Echo.Group("/user")
+	adminRoute := server.Echo.Group("/admin")
 
 	// Prints to default page
 	server.Echo.GET("/", func(c echo.Context) error {
@@ -46,4 +52,19 @@ func ConfigureRoutes(server *server.Server) {
 	orderRoute.POST("/", odController.Create)
 	orderRoute.PUT("/:id", odController.Update)
 	orderRoute.DELETE("/:id", odController.Delete)
+
+	// Initialise User CRUD
+	userRoute.GET("/:id", userController.Get)
+	userRoute.GET("/", userController.GetAll)
+	userRoute.POST("/", userController.Create)
+	userRoute.PUT("/:id", userController.Update)
+	userRoute.DELETE("/:id", userController.Delete)
+
+	// Initialise Admin CRUD
+	adminRoute.GET("/:id", adminController.Get)
+	adminRoute.GET("/", adminController.GetAll)
+	adminRoute.POST("/", adminController.Create)
+	adminRoute.PUT("/:id", adminController.Update)
+	adminRoute.DELETE("/:id", adminController.Delete)
+
 }

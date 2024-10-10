@@ -25,11 +25,15 @@ func DatabaseConnection() *gorm.DB {
 	db.AutoMigrate(&models.Manufacturer{})
 	db.AutoMigrate(&models.Product{})
 	db.AutoMigrate(&models.Order{})
+	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.Admin{})
 
 	seeding := seeders.NewSeed(db)
 	seeding.CreateManufacturer()
 	seeding.CreateProduct()
 	seeding.CreateOrder()
+	seeding.CreateUser()
+	seeding.CreateAdmin()
 
 	return db
 }

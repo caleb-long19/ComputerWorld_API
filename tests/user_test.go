@@ -8,81 +8,78 @@ import (
 	"testing"
 )
 
-func TestManufacturerCreate(t *testing.T) {
-	ts.ClearTable("manufacturers")
+func TestUserCreate(t *testing.T) {
+	ts.ClearTable("users")
 
 	request := helpers.Request{
 		Method: http.MethodPost,
-		Url:    "/manufacturer/",
+		Url:    "/user/",
 	}
 
-	mf := &models.Manufacturer{
-		ManufacturerName: "Microsoftest",
+	user := &models.User{
+		Email:    "johntest@gmail.com",
+		Name:     "John Test",
+		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Database.Create(user)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Can create a manufacturer",
+			TestName: "Can create a user",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "Wacom",
+			RequestBody: models.User{
+				Email:    "sarahtest@gmail.com",
+				Name:     "Sarah Test",
+				Password: "TestPass12!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
-				BodyParts:  []string{`"manufacturer_name":"Wacom"`},
+				BodyParts:  []string{`"name":"Sarah Test"`},
 			},
 		},
 		{
-			TestName: "Cannot create manufacturer as they already exist!",
+			TestName: "Cannot create user with a duplicate email",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "Microsoftest",
+			RequestBody: models.User{
+				Email:    "johntest@gmail.com",
+				Name:     "John Test",
+				Password: "TestPass12!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot create manufacturer as name was left blank",
+			TestName: "Cannot create user with an incorrect email format",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "",
+			RequestBody: models.User{
+				Email:    "kelly_email@gmail",
+				Name:     "Kelly Test",
+				Password: "TestPass12!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot create manufacturer as name contains special characters",
+			TestName: "Cannot create user with an invalid password",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    request.Url,
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "Test####@",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusBadRequest,
-			},
-		},
-		{
-			TestName: "Cannot create manufacturer when an ID is given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    request.Url,
-			},
-			RequestBody: models.Manufacturer{
-				ManufacturerID: 1,
+			RequestBody: models.User{
+				Email:    "jacktest@gmail.com",
+				Name:     "Jack Test",
+				Password: "password",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -94,39 +91,40 @@ func TestManufacturerCreate(t *testing.T) {
 			ts.ExecuteTest(t, &testCase)
 		})
 	}
-
 }
 
-func TestManufacturerGet(t *testing.T) {
-	ts.ClearTable("manufacturers")
+func TestUserGet(t *testing.T) {
+	ts.ClearTable("users")
 
 	request := helpers.Request{
 		Method: http.MethodGet,
-		Url:    "/manufacturer",
+		Url:    "/user",
 	}
 
-	mf := &models.Manufacturer{
-		ManufacturerName: "Microsoft",
+	user := &models.User{
+		Email:    "johntest@gmail.com",
+		Name:     "John Test",
+		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Database.Create(user)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Can get manufacturer by ID",
+			TestName: "Can get user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
-					mf.ManufacturerName,
-					fmt.Sprintf(`"manufacturer_id":%v`, mf.ManufacturerID),
+					user.Name,
+					fmt.Sprintf(`"user_id":%v`, user.UserID),
 				},
 			},
 		},
 		{
-			TestName: "Can retrieve all manufacturers without ID",
+			TestName: "Can retrieve all users without ID",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/", request.Url),
@@ -136,7 +134,7 @@ func TestManufacturerGet(t *testing.T) {
 			},
 		},
 		{
-			TestName: "Cannot get manufacturer that does not exist",
+			TestName: "Cannot get user that does not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 10000),
@@ -153,76 +151,85 @@ func TestManufacturerGet(t *testing.T) {
 	}
 }
 
-func TestManufacturerUpdate(t *testing.T) {
-	ts.ClearTable("manufacturers")
+func TestUserUpdate(t *testing.T) {
+	ts.ClearTable("users")
 
 	request := helpers.Request{
 		Method: http.MethodPut,
-		Url:    "/manufacturer",
+		Url:    "/user",
 	}
 
-	mf := &models.Manufacturer{
-		ManufacturerName: "Microsoft",
+	user := &models.User{
+		Email:    "johntest@gmail.com",
+		Name:     "John Test",
+		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Database.Create(user)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Can update Manufacturer by ID",
+			TestName: "Can update user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "Akira",
+			RequestBody: models.User{
+				Email:    "johntestnew@gmail.com",
+				Name:     "Johnny Testing",
+				Password: "TestPass17!!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
-				BodyParts:  []string{fmt.Sprintf(`"manufacturer_name":"Akira"`)},
+				BodyParts:  []string{fmt.Sprintf(`"email":"johntestnew@gmail.com"`)},
 			},
 		},
 		{
-			TestName: "Can update Manufacturer by ID and include numbers in the name",
+			TestName: "Cannot update user as email format was incorrect",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "AkiraTest123",
-			},
-			Expected: helpers.ExpectedResponse{
-				StatusCode: http.StatusCreated,
-				BodyParts:  []string{fmt.Sprintf(`"manufacturer_name":"AkiraTest123"`)},
-			},
-		},
-		{
-			TestName: "Cannot update manufacturer as no name was given",
-			Request: helpers.Request{
-				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
-			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "",
+			RequestBody: models.User{
+				Email:    "test.gmail.com",
+				Name:     "John Testing",
+				Password: "TestPass17!!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot update manufacturer as name has special characters",
+			TestName: "Cannot update user as name has special characters",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
 			},
-			RequestBody: models.Manufacturer{
-				ManufacturerName: "MicrosoftTest#####",
+			RequestBody: models.User{
+				Email:    "jacktestnew@gmail.com",
+				Name:     "Jack Testing@@@",
+				Password: "TestPass17!!",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			TestName: "Cannot update manufacturer as they do not exist",
+			TestName: "Cannot update user as password has invalid format",
+			Request: helpers.Request{
+				Method: request.Method,
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+			},
+			RequestBody: models.User{
+				Email:    "sarahtestnew@gmail.com",
+				Name:     "Sarah Test",
+				Password: "Testing",
+			},
+			Expected: helpers.ExpectedResponse{
+				StatusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			TestName: "Cannot update user as they do not exist",
 			Request: helpers.Request{
 				Method: request.Method,
 				Url:    fmt.Sprintf("%v/%v", request.Url, 100000),
@@ -239,33 +246,35 @@ func TestManufacturerUpdate(t *testing.T) {
 	}
 }
 
-func TestManufacturerDelete(t *testing.T) {
+func TestUserDelete(t *testing.T) {
 	request := helpers.Request{
 		Method: http.MethodDelete,
-		Url:    "/manufacturer",
+		Url:    "/user",
 	}
 
-	mf := &models.Manufacturer{
-		ManufacturerName: "Microsoft",
+	user := &models.User{
+		Email:    "deletetest@gmail.com",
+		Name:     "Delete Test",
+		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Database.Create(user)
 
 	cases := []helpers.TestCase{
 		{
-			TestName: "Can delete manufacturer by ID",
+			TestName: "Can delete user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 			},
 		},
 		{
-			TestName: "Cannot find and delete manufacturer that does not exist",
+			TestName: "Cannot find and delete user that does not exist",
 			Request: helpers.Request{
 				Method: http.MethodDelete,
-				Url:    "/manufacturer/10000000",
+				Url:    "/user/10000000",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
