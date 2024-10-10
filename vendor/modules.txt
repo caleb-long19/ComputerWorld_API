@@ -1,8 +1,6 @@
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
-## explicit
 # github.com/golang-jwt/jwt v3.2.2+incompatible
 ## explicit
 github.com/golang-jwt/jwt
@@ -46,6 +44,10 @@ github.com/valyala/fasttemplate
 ## explicit; go 1.18
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
+golang.org/x/crypto/argon2
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blake2b
+golang.org/x/crypto/blowfish
 # golang.org/x/net v0.24.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
@@ -55,6 +57,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 # golang.org/x/sys v0.19.0
 ## explicit; go 1.18
+golang.org/x/sys/cpu
 golang.org/x/sys/unix
 # golang.org/x/text v0.17.0
 ## explicit; go 1.18

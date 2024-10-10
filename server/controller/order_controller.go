@@ -9,13 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 	"net/http"
 )
 
 type OrderController struct {
 	OrderRepository repositories.OrderInterface
-	DB              *gorm.DB
 }
 
 func (oc *OrderController) Create(c echo.Context) error {
