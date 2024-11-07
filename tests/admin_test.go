@@ -113,13 +113,13 @@ func TestAdminGet(t *testing.T) {
 			TestName: "Can get admin by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
 					admin.Name,
-					fmt.Sprintf(`"admin_id":%v`, admin.AdminID),
+					fmt.Sprintf(`"admin_id":%v`, admin.UID),
 				},
 			},
 		},
@@ -171,7 +171,7 @@ func TestAdminUpdate(t *testing.T) {
 			TestName: "Can update admin by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			RequestBody: models.User{
 				Email:    "johnadminnew@gmail.com",
@@ -187,7 +187,7 @@ func TestAdminUpdate(t *testing.T) {
 			TestName: "Cannot update admin as email format was incorrect",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			RequestBody: models.User{
 				Email:    "admin_test.gmail.com",
@@ -202,7 +202,7 @@ func TestAdminUpdate(t *testing.T) {
 			TestName: "Cannot update admin as name has special characters",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			RequestBody: models.User{
 				Email:    "jackadminnew@gmail.com",
@@ -217,7 +217,7 @@ func TestAdminUpdate(t *testing.T) {
 			TestName: "Cannot update admin as password has invalid format",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			RequestBody: models.User{
 				Email:    "sarahadminnew@gmail.com",
@@ -264,7 +264,7 @@ func TestAdminDelete(t *testing.T) {
 			TestName: "Can delete admin by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, admin.AdminID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, admin.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,

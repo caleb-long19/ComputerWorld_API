@@ -4,7 +4,7 @@ import (
 	"ComputerWorld_API/db/models"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
 )
 
 type OrderInterface interface {
@@ -32,7 +32,7 @@ func (repo *OrderRepository) Get(id interface{}) (*models.Order, error) {
 	if err := repo.DB.Where("order_id = ?", id).First(&order).Error; err != nil {
 		return nil, errors.New(fmt.Sprintf("Could not find order with id %v", id))
 	}
-	fmt.Println("Updating order with ID:", order.OrderID)
+	fmt.Println("Updating order with ID:", order.UID)
 	return &order, nil
 }
 

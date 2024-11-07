@@ -82,7 +82,7 @@ func TestManufacturerCreate(t *testing.T) {
 				Url:    request.Url,
 			},
 			RequestBody: models.Manufacturer{
-				ManufacturerID: 1,
+				UID: "MANUTnf848f",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -115,13 +115,13 @@ func TestManufacturerGet(t *testing.T) {
 			TestName: "Can get manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
 					mf.ManufacturerName,
-					fmt.Sprintf(`"manufacturer_id":%v`, mf.ManufacturerID),
+					fmt.Sprintf(`"manufacturer_id":%v`, mf.UID),
 				},
 			},
 		},
@@ -171,7 +171,7 @@ func TestManufacturerUpdate(t *testing.T) {
 			TestName: "Can update Manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			RequestBody: models.Manufacturer{
 				ManufacturerName: "Akira",
@@ -185,7 +185,7 @@ func TestManufacturerUpdate(t *testing.T) {
 			TestName: "Can update Manufacturer by ID and include numbers in the name",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			RequestBody: models.Manufacturer{
 				ManufacturerName: "AkiraTest123",
@@ -199,7 +199,7 @@ func TestManufacturerUpdate(t *testing.T) {
 			TestName: "Cannot update manufacturer as no name was given",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			RequestBody: models.Manufacturer{
 				ManufacturerName: "",
@@ -212,7 +212,7 @@ func TestManufacturerUpdate(t *testing.T) {
 			TestName: "Cannot update manufacturer as name has special characters",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			RequestBody: models.Manufacturer{
 				ManufacturerName: "MicrosoftTest#####",
@@ -255,7 +255,7 @@ func TestManufacturerDelete(t *testing.T) {
 			TestName: "Can delete manufacturer by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, mf.ManufacturerID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, mf.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,

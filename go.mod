@@ -3,6 +3,10 @@ module ComputerWorld_API
 go 1.22
 
 require (
+	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/google/uuid v1.6.0
+	github.com/jinzhu/gorm v1.9.16
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.22.0

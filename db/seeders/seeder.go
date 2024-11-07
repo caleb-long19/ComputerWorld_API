@@ -1,11 +1,11 @@
 package seeders
 
-import "gorm.io/gorm"
+import "github.com/jinzhu/gorm"
 
 type Seeding struct {
-	database *gorm.DB
+	DB *gorm.DB
 }
 
 func NewSeed(db *gorm.DB) *Seeding {
-	return &Seeding{database: db}
+	return &Seeding{DB: db}
 }

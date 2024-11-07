@@ -4,7 +4,7 @@ import (
 	"ComputerWorld_API/db/models"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
 )
 
 type UserInterface interface {
@@ -33,6 +33,14 @@ func (repo *UserRepository) Get(id interface{}) (*models.User, error) {
 		return nil, errors.New(fmt.Sprintf("Could not find user with id %v", id))
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) GetUserByUID(user *models.User, uid string) {
+	r.DB.Where("uid = ?", uid).Take(user)
+}
+
+func (r *UserRepository) GetUsers(users *[]models.User, scopes []func(db2 *gorm.DB) *gorm.DB) {
+	r.DB.Scopes(scopes...).Find(users)
 }
 
 func (repo *UserRepository) GetAll() ([]*models.User, error) {

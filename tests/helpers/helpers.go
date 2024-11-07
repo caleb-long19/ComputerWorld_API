@@ -57,7 +57,7 @@ func (ts *TestServer) ExecuteTest(t *testing.T, testCase *TestCase) {
 }
 
 func (ts *TestServer) ExecuteRequest(req *http.Request) *httptest.ResponseRecorder {
-	// Create a new recorder then process request with server.
+	// Create a new recorder then process request with api.
 	rr := httptest.NewRecorder()
 	ts.S.Echo.ServeHTTP(rr, req)
 	return rr

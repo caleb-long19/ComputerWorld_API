@@ -9,21 +9,21 @@ func (s *Seeding) CreateManufacturer() {
 
 	manufacturers := []models.Manufacturer{
 		{
-			ManufacturerID:   1,
+			UID:              "",
 			ManufacturerName: "Microsoft",
 		},
 		{
-			ManufacturerID:   2,
+			UID:              "",
 			ManufacturerName: "Sony",
 		},
 		{
-			ManufacturerID:   3,
+			UID:              "",
 			ManufacturerName: "Nintendo",
 		},
 	}
 
 	for _, manufacturer := range manufacturers {
-		err := s.database.Where("manufacturer_id = ?", manufacturer.ManufacturerID).FirstOrCreate(&manufacturer).Error
+		err := s.DB.Where("manufacturer_id = ?", manufacturer.UID).FirstOrCreate(&manufacturer).Error
 		if err != nil {
 			log.Printf("Error: Could not create a manufacturer %s: %v", manufacturer.ManufacturerName, err.Error())
 		}

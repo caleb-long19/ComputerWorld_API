@@ -4,7 +4,7 @@ import (
 	"ComputerWorld_API/db/models"
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
+	"github.com/jinzhu/gorm"
 )
 
 type ManufacturerInterface interface {

@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Error when setting up environment: %v\n", err)
 	}
 
-	// Create the test server
+	// Create the test api
 	ts = helpers.NewTestServer()
 	status := m.Run()
 	os.Exit(status)

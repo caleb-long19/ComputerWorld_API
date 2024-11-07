@@ -19,7 +19,7 @@ func TestOrderCreate(t *testing.T) {
 	ord := &models.Order{
 		OrderRef:    "TESTREF",
 		OrderAmount: 3,
-		ProductID:   1,
+		ProductUID:  "PRODTifhfh1g",
 	}
 	ts.S.Database.Create(ord)
 
@@ -33,7 +33,7 @@ func TestOrderCreate(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "SGWTDF",
 				OrderAmount: 3,
-				ProductID:   1,
+				ProductUID:  "PRODTifhfh1g",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusCreated,
@@ -49,7 +49,7 @@ func TestOrderCreate(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "TESTREF##@",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductUID:  "PRODT9hfkdT",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -64,7 +64,7 @@ func TestOrderCreate(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductUID:  "PRODTgnv94c",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusBadRequest,
@@ -79,7 +79,7 @@ func TestOrderCreate(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "TESTREF",
 				OrderAmount: 3,
-				ProductID:   2,
+				ProductUID:  "PRODTghn349d",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusConflict,
@@ -94,7 +94,7 @@ func TestOrderCreate(t *testing.T) {
 			RequestBody: models.Order{
 				OrderRef:    "TestIDExists",
 				OrderAmount: 3,
-				ProductID:   99999999,
+				ProductUID:  "SDFOHNSID24f",
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusNotFound,
@@ -120,7 +120,7 @@ func TestOrderGet(t *testing.T) {
 	order := &models.Order{
 		OrderRef:    "3GNGKF",
 		OrderAmount: 2,
-		ProductID:   2,
+		ProductUID:  2,
 	}
 	ts.S.Database.Create(order)
 

@@ -1,21 +1,21 @@
 package helpers
 
 import (
+	"ComputerWorld_API/api"
+	"ComputerWorld_API/api/routes"
 	"ComputerWorld_API/db"
-	"ComputerWorld_API/server"
-	"ComputerWorld_API/server/routes"
 	"github.com/labstack/echo/v4"
 )
 
 type TestServer struct {
-	S *server.Server
+	S *api.Server
 }
 
 func NewTestServer() *TestServer {
 	ts := &TestServer{
-		S: &server.Server{
+		S: &api.Server{
 			Echo:     echo.New(),
-			Database: db.DatabaseConnection(),
+			Database: db.Init(),
 		},
 	}
 

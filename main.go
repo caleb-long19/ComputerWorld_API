@@ -1,14 +1,14 @@
 package main
 
 import (
-	"ComputerWorld_API/server"
-	"ComputerWorld_API/server/routes"
+	"ComputerWorld_API/api"
+	"ComputerWorld_API/api/routes"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
 )
 
 func main() {
-	app := server.NewServer()
+	app := api.NewServer()
 	routes.ConfigureRoutes(app)
 
 	// Apply the CORS middleware using Echo's built-in middleware
@@ -21,6 +21,6 @@ func main() {
 
 	err := app.Start("5000")
 	if err != nil {
-		log.Fatalf("Error starting server: %v", err)
+		log.Fatalf("Error starting api: %v", err)
 	}
 }
