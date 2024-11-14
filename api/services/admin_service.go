@@ -15,12 +15,11 @@ func NewAdminService(db *gorm.DB) *AdminService {
 	return &AdminService{Db: db}
 }
 
-func (s *AdminService) Create(request *requests.AdminRequest, user *models.Admin) error {
+func (s *AdminService) Create(request *requests.CreateAdminRequest, user *models.Admin) error {
 	user.Email = request.Email
 	user.Name = request.Name
 
 	return s.Db.Create(&user).Error
-
 }
 
 func (s *AdminService) Update(admin *models.Admin) error {

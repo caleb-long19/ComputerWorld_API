@@ -6,135 +6,97 @@ import (
 	"ComputerWorld_API/api/responses"
 	"ComputerWorld_API/api/services"
 	"ComputerWorld_API/db/models"
-	"errors"
+	"ComputerWorld_API/db/repositories"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type AdminHandler struct {
-	server  *s.Server
-	service *services.AdminService
+	server    *s.Server
+	adminRepo *repositories.AdminRepository
+	service   *services.AdminService
 }
 
 func NewAdminHandler(server *s.Server) *AdminHandler {
 	ah := &AdminHandler{server: server}
+	ah.adminRepo = repositories.NewAdminRepository(server.Db)
 	ah.service = services.NewAdminService(server.Db)
 	return ah
 }
 
-func (ah *AdminHandler) Create(c echo.Context) error {
-	requestAdmin := new(requests.CreateAdminRequest)
-
-	if err := c.Bind(&requestAdmin); err != nil {
+func (h *AdminHandler) Create(c echo.Context) error {
+	createAdminRequest := new(requests.CreateAdminRequest)
+	if err := c.Bind(&createAdminRequest); err != nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind admin data"))
 	}
-
-	// Validate the request manufacturer data
-	validatedAdmin, errV := ValidateAdminRequest(requestAdmin)
-	if errV != nil {
-		// Return the validation error directly
-		return responses.ErrorResponse(c, 0, errV)
+	if err := c.Validate(createAdminRequest); err != nil {
+		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
-	// Call repository method to create the new manufacturer
-	err := ah.Create(validatedAdmin)
+	admin := &models.Admin{}
+	err := h.service.Create(createAdminRequest, admin)
 	if err != nil {
 		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("failed to create admin: %v", err))
 	}
 
-	return c.JSON(http.StatusCreated, validatedAdmin)
+	response := responses.NewAdminResponse(admin)
+	return responses.Response(c, http.StatusCreated, response)
 }
 
-func (ah *AdminHandler) Get(c echo.Context) error {
-	admin, err := ah.AdminRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
+func (h *AdminHandler) Update(c echo.Context) error {
+	updateAdminRequest := new(requests.UpdateAdminRequest)
+	if err := c.Bind(&updateAdminRequest); err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusOK, admin)
+	adminId := c.Param("id")
+
+	admin := h.adminRepo.Get(adminId)
+	if admin.UID == "" {
+		return responses.ErrResponse(c, http.StatusNotFound, "admin does not exist")
+	}
+	if err := c.Validate(updateAdminRequest); err != nil {
+		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+	}
+
+	admin.Email = updateAdminRequest.Email
+	admin.Name = updateAdminRequest.Name
+
+	if err := h.service.Update(admin); err != nil {
+		return responses.ErrResponse(c, http.StatusInternalServerError, "Something went wrong when updating the admin in the database")
+	}
+
+	return responses.MessageResponse(c, http.StatusOK, "Admin successfully updated")
 }
 
-func (ah *AdminHandler) GetAll(c echo.Context) error {
-	admins, err := ah.AdminRepository.GetAll()
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, err)
+func (h *AdminHandler) Get(c echo.Context) error {
+	id := c.Param("id")
+
+	admin := &models.Admin{}
+
+	h.adminRepo.GetByAdminId(admin, id)
+
+	if admin.UID == "" {
+		return responses.ErrResponse(c, http.StatusNotFound, "admin does not exist")
 	}
-	return c.JSON(http.StatusOK, admins)
+
+	response := responses.NewAdminResponse(admin)
+	return responses.Response(c, http.StatusOK, response)
 }
 
-func (ah *AdminHandler) Update(c echo.Context) error {
-	existingAdmin, err := ah.AdminRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, fmt.Errorf("admin not found: %v", err))
+func (h *AdminHandler) Delete(c echo.Context) error {
+	uid := c.Param("uid")
+
+	admin := h.adminRepo.Get(uid)
+
+	if admin.UID == "" {
+		return responses.ErrResponse(c, http.StatusNotFound, "User not found")
 	}
 
-	var updateAdmin = new(requests.AdminRequest)
-	if err := c.Bind(updateAdmin); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind admin data"))
-	}
-	if updateAdmin == nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid admin data"))
+	if err := h.service.Delete(admin); err != nil {
+		return responses.ErrResponse(c, http.StatusInternalServerError, "Something went wrong deleting the user from the database.")
 	}
 
-	// Validate the request manufacturer data
-	validatedExistingAdmin, errV := ValidateAdminRequest(updateAdmin)
-	if errV != nil {
-		// Return the validation error directly
-		return responses.ErrorResponse(c, 0, errV)
-	}
-
-	existingAdmin.Email = validatedExistingAdmin.Email
-	existingAdmin.Name = validatedExistingAdmin.Name
-	existingAdmin.Password = validatedExistingAdmin.Password
-
-	if err := ah.AdminRepository.Update(existingAdmin); err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update admin: %v", err))
-	}
-
-	return c.JSON(http.StatusCreated, existingAdmin)
-}
-
-func (ah *AdminHandler) Delete(c echo.Context) error {
-	err := ah.AdminRepository.Delete(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
-	}
-
-	return c.JSON(http.StatusOK, "Admin successfully deleted")
-}
-
-// ValidateAdminRequest validates the input request for creating or updating a manufacturer.
-func ValidateAdminRequest(request *requests.AdminRequest) (*models.Admin, error) {
-	if request == nil {
-		return nil, errors.New("invalid request body")
-	}
-
-	admin := new(models.Admin)
-	if request.Email == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "email is required")
-	}
-	if len(request.Email) < 1 || len(request.Email) > 200 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "email must be between 1 and 200 characters")
-	}
-	if request.Name == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Name is required")
-	}
-	if len(request.Name) < 1 || len(request.Email) > 50 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Name must be between 1 and 50 characters")
-	}
-	if request.Password == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Password is required")
-	}
-
-	admin.Email = request.Email
-	admin.Name = request.Name
-	admin.Password = request.Password
-
-	err := requests.ValidateAdminInputs(admin)
-	if err != nil {
-		return nil, err
-	}
-
-	return admin, nil
+	return responses.MessageResponse(c, http.StatusOK, "User successfully deleted")
 }

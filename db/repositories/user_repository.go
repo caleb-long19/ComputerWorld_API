@@ -2,18 +2,8 @@ package repositories
 
 import (
 	"ComputerWorld_API/db/models"
-	"errors"
-	"fmt"
 	"github.com/jinzhu/gorm"
 )
-
-type UserInterface interface {
-	Create(user *models.User) error
-	Get(id interface{}) (*models.User, error)
-	GetAll() ([]*models.User, error)
-	Update(user *models.User) error
-	Delete(id interface{}) error
-}
 
 type UserRepository struct {
 	DB *gorm.DB
@@ -23,42 +13,17 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{DB: db}
 }
 
-func (repo *UserRepository) Create(user *models.User) error {
-	return repo.DB.Create(user).Error
-}
-
-func (repo *UserRepository) Get(id interface{}) (*models.User, error) {
-	var user models.User
-	if err := repo.DB.Where("user_id = ?", id).First(&user).Error; err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find user with id %v", id))
-	}
-	return &user, nil
+func (repo *UserRepository) Get(id interface{}) *models.User {
+	user := &models.User{}
+	repo.DB.Where("ID = ?", id).Find(user)
+	return user
 }
 
 func (r *UserRepository) GetUserByUID(user *models.User, uid string) {
 	r.DB.Where("uid = ?", uid).Take(user)
 }
 
-func (r *UserRepository) GetUsers(users *[]models.User, scopes []func(db2 *gorm.DB) *gorm.DB) {
-	r.DB.Scopes(scopes...).Find(users)
-}
-
-func (repo *UserRepository) GetAll() ([]*models.User, error) {
-	var users []*models.User
-	if err := repo.DB.Find(&users).Error; err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find users"))
-	}
-	return users, nil
-}
-
-func (repo *UserRepository) Update(user *models.User) error {
-	return repo.DB.Save(user).Error
-}
-
-func (repo *UserRepository) Delete(id interface{}) error {
-	_, err := repo.Get(id)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Could not find user with id %v", id))
-	}
-	return repo.DB.Delete(models.User{}, "user_id = ?", id).Error
+func (repo *UserRepository) List(users *[]models.User) {
+	repo.DB.Model(&models.User{}).Find(users)
+	return
 }
