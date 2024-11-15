@@ -28,16 +28,16 @@ func NewAdminHandler(server *s.Server) *AdminHandler {
 func (h *AdminHandler) Create(c echo.Context) error {
 	createAdminRequest := new(requests.CreateAdminRequest)
 	if err := c.Bind(&createAdminRequest); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind admin data"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, "could not bind admin data")
 	}
 	if err := c.Validate(createAdminRequest); err != nil {
-		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
 	admin := &models.Admin{}
 	err := h.service.Create(createAdminRequest, admin)
 	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("failed to create admin: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("failed to create admin: %v", err))
 	}
 
 	response := responses.NewAdminResponse(admin)
@@ -54,17 +54,17 @@ func (h *AdminHandler) Update(c echo.Context) error {
 
 	admin := h.adminRepo.Get(adminId)
 	if admin.UID == "" {
-		return responses.ErrResponse(c, http.StatusNotFound, "admin does not exist")
+		return responses.ErrorResponse(c, http.StatusNotFound, "admin does not exist")
 	}
 	if err := c.Validate(updateAdminRequest); err != nil {
-		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
 	admin.Email = updateAdminRequest.Email
 	admin.Name = updateAdminRequest.Name
 
 	if err := h.service.Update(admin); err != nil {
-		return responses.ErrResponse(c, http.StatusInternalServerError, "Something went wrong when updating the admin in the database")
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong when updating the admin in the database")
 	}
 
 	return responses.MessageResponse(c, http.StatusOK, "Admin successfully updated")
@@ -78,7 +78,7 @@ func (h *AdminHandler) Get(c echo.Context) error {
 	h.adminRepo.GetByAdminId(admin, id)
 
 	if admin.UID == "" {
-		return responses.ErrResponse(c, http.StatusNotFound, "admin does not exist")
+		return responses.ErrorResponse(c, http.StatusNotFound, "admin does not exist")
 	}
 
 	response := responses.NewAdminResponse(admin)
@@ -91,11 +91,11 @@ func (h *AdminHandler) Delete(c echo.Context) error {
 	admin := h.adminRepo.Get(uid)
 
 	if admin.UID == "" {
-		return responses.ErrResponse(c, http.StatusNotFound, "User not found")
+		return responses.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
 
 	if err := h.service.Delete(admin); err != nil {
-		return responses.ErrResponse(c, http.StatusInternalServerError, "Something went wrong deleting the user from the database.")
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong deleting the user from the database.")
 	}
 
 	return responses.MessageResponse(c, http.StatusOK, "User successfully deleted")

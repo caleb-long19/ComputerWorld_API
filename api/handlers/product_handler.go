@@ -6,157 +6,97 @@ import (
 	"ComputerWorld_API/api/responses"
 	"ComputerWorld_API/api/services"
 	"ComputerWorld_API/db/models"
-	"errors"
+	"ComputerWorld_API/db/repositories"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type ProductHandler struct {
-	server  *s.Server
-	service *services.ProductService
+	server      *s.Server
+	productRepo *repositories.ProductRepository
+	service     *services.ProductService
 }
 
 func NewProductHandler(server *s.Server) *ProductHandler {
 	ph := &ProductHandler{server: server}
+	ph.productRepo = repositories.NewProductRepository(server.Db)
 	ph.service = services.NewProductService(server.Db)
 	return ph
 }
 
-func (pc *ProductController) Create(c echo.Context) error {
-	// Bind request body to the ProductRequest struct
-	requestProduct := new(requests.ProductRequest)
-
-	if err := c.Bind(&requestProduct); err != nil {
-		// Return bad request if binding fails
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind product data"))
+func (h *ProductHandler) Create(c echo.Context) error {
+	createProductRequest := new(requests.CreateProductRequest)
+	if err := c.Bind(&createProductRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "could not bind product data")
+	}
+	if err := c.Validate(createProductRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
-	// Validate the request manufacturer data
-	validatedProduct, errV := validateProductRequest(requestProduct)
-	if errV != nil {
-		// Return the validation error directly, with its status code
-		return responses.ErrorResponse(c, 0, errV)
+	product := &models.Product{}
+	if err := h.service.Create(createProductRequest, product); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("failed to store product in the database: %v", err))
 	}
 
-	// Call repository method to create the new product
-	err := pc.ProductRepository.Create(validatedProduct)
-	if err != nil {
-		// Return conflict if product creation fails
-		return responses.ErrorResponse(c, http.StatusConflict, fmt.Errorf("failed to create product: %v", err))
-	}
-
-	// Return success response with the created product
-	return c.JSON(http.StatusCreated, validatedProduct)
+	response := responses.NewProductResponse(product)
+	return responses.Response(c, http.StatusCreated, response)
 }
 
-func (pc *ProductController) Get(c echo.Context) error {
-	product, err := pc.ProductRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
+func (h *ProductHandler) Update(c echo.Context) error {
+	updateProductRequest := new(requests.UpdateProductRequest)
+	if err := c.Bind(&updateProductRequest); err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusOK, product)
+	productUID := c.Param("uid")
+
+	product := h.productRepo.Get(productUID)
+	if product.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "product does not exist")
+	}
+	if err := c.Validate(updateProductRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+	}
+
+	product.ProductCode = updateProductRequest.ProductCode
+	product.ProductName = updateProductRequest.ProductName
+	product.ManufacturerUID = updateProductRequest.ManufacturerUID
+	product.Stock = updateProductRequest.ProductStock
+	product.Price = updateProductRequest.ProductPrice
+
+	if err := h.service.Update(product); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong when updating the product in the database")
+	}
+
+	return responses.MessageResponse(c, http.StatusOK, "Product successfully updated")
 }
 
-func (pc *ProductController) GetAll(c echo.Context) error {
-	products, err := pc.ProductRepository.GetAll()
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, err)
+func (h *ProductHandler) Get(c echo.Context) error {
+	uid := c.Param("uid")
+
+	product := &models.Product{}
+
+	h.productRepo.GetProductByUID(product, uid)
+	if product.UID == "" {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "Product not found")
 	}
-	return c.JSON(http.StatusOK, products)
+
+	response := responses.NewProductResponse(product)
+	return responses.Response(c, http.StatusOK, response)
 }
 
-func (pc *ProductController) Update(c echo.Context) error {
-	existingProduct, err := pc.ProductRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, fmt.Errorf("product not found: %v", err))
+func (h *ProductHandler) Delete(c echo.Context) error {
+	uid := c.Param("uid")
+
+	product := h.productRepo.Get(uid)
+
+	if product.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "Product not found")
+	}
+	if err := h.service.Delete(product); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong deleting the product from the database.")
 	}
 
-	var updateProduct = new(requests.ProductRequest)
-	if err := c.Bind(updateProduct); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind product data"))
-	}
-
-	if updateProduct == nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid product data"))
-	}
-
-	// Validate the request manufacturer data
-	validatedProduct, errV := validateProductRequest(updateProduct)
-	if errV != nil {
-		// Return the validation error directly, with its status code
-		return responses.ErrorResponse(c, 0, errV)
-	}
-
-	// Update the existing product fields with the new values
-	existingProduct.ProductName = validatedProduct.ProductName
-	existingProduct.ProductCode = validatedProduct.ProductCode
-	existingProduct.ManufacturerUID = validatedProduct.ManufacturerUID
-	existingProduct.Stock = validatedProduct.Stock
-	existingProduct.Price = validatedProduct.Price
-
-	// Attempt to update the product in the repository
-	if err := pc.ProductRepository.Update(existingProduct); err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update product: %v", err))
-	}
-
-	return c.JSON(http.StatusCreated, existingProduct)
-}
-
-func (pc *ProductController) Delete(c echo.Context) error {
-	err := pc.ProductRepository.Delete(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
-	}
-
-	return c.JSON(http.StatusOK, "Product successfully deleted")
-}
-
-// Validation >>>
-// Simple validation methods to prevent incorrect values from being requested
-
-func validateProductRequest(request *requests.ProductRequest) (*models.Product, error) {
-	if request == nil {
-		return nil, errors.New("invalid request body")
-	}
-
-	product := new(models.Product)
-	if request.ProductCode == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product code")
-	}
-	if len(request.ProductCode) < 3 || len(request.ProductCode) > 12 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Product code must be between 3 and 12 characters")
-	}
-	if request.ProductName == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product name")
-	}
-	if len(request.ProductName) < 3 || len(request.ProductName) > 25 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Product name must be between 3 and 25 characters")
-	}
-	if request.ManufacturerUID <= "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid manufacturer UID")
-	}
-	if request.ProductStock < 0 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid stock amount")
-	}
-	if request.ProductStock > 1000 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Product stock exceeds maximum limit")
-	}
-	if request.ProductPrice <= 0.0 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product price")
-	}
-
-	product.ProductCode = request.ProductCode
-	product.ProductName = request.ProductName
-	product.ManufacturerUID = request.ManufacturerUID
-	product.Stock = request.ProductStock
-	product.Price = request.ProductPrice
-
-	err := requests.ValidateProductInputs(product)
-	if err != nil {
-		return nil, err
-	}
-
-	return product, nil
+	return responses.MessageResponse(c, http.StatusOK, "Product successfully deleted")
 }

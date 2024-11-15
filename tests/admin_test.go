@@ -21,7 +21,7 @@ func TestAdminCreate(t *testing.T) {
 		Name:     "John Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(admin)
+	ts.S.Db.Create(admin)
 
 	cases := []helpers.TestCase{
 		{
@@ -106,7 +106,7 @@ func TestAdminGet(t *testing.T) {
 		Name:     "John Admin",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(admin)
+	ts.S.Db.Create(admin)
 
 	cases := []helpers.TestCase{
 		{
@@ -164,7 +164,7 @@ func TestAdminUpdate(t *testing.T) {
 		Name:     "John Admin",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(admin)
+	ts.S.Db.Create(admin)
 
 	cases := []helpers.TestCase{
 		{
@@ -257,7 +257,7 @@ func TestAdminDelete(t *testing.T) {
 		Name:     "Delete Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(admin)
+	ts.S.Db.Create(admin)
 
 	cases := []helpers.TestCase{
 		{

@@ -2,18 +2,8 @@ package repositories
 
 import (
 	"ComputerWorld_API/db/models"
-	"errors"
-	"fmt"
 	"github.com/jinzhu/gorm"
 )
-
-type OrderInterface interface {
-	Create(order *models.Order) error
-	Get(id interface{}) (*models.Order, error)
-	GetAll() ([]*models.Order, error)
-	Update(order *models.Order) error
-	Delete(id interface{}) error
-}
 
 type OrderRepository struct {
 	DB *gorm.DB
@@ -23,35 +13,16 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	return &OrderRepository{DB: db}
 }
 
-func (repo *OrderRepository) Create(order *models.Order) error {
-	return repo.DB.Create(order).Error
+func (r *OrderRepository) Get(uid interface{}) *models.Order {
+	order := &models.Order{}
+	r.DB.Where("uid = ?", uid).Find(order)
+	return order
 }
 
-func (repo *OrderRepository) Get(id interface{}) (*models.Order, error) {
-	var order models.Order
-	if err := repo.DB.Where("order_id = ?", id).First(&order).Error; err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find order with id %v", id))
-	}
-	fmt.Println("Updating order with ID:", order.UID)
-	return &order, nil
+func (r *OrderRepository) GetOrderByUID(order *models.Order, uid string) {
+	r.DB.Where("uid = ?", uid).Take(order)
 }
 
-func (repo *OrderRepository) GetAll() ([]*models.Order, error) {
-	var orders []*models.Order
-	if err := repo.DB.Find(&orders).Error; err != nil {
-		return nil, errors.New(fmt.Sprintf("Could not find orders %v", orders))
-	}
-	return orders, nil
-}
-
-func (repo *OrderRepository) Update(order *models.Order) error {
-	return repo.DB.Save(order).Error
-}
-
-func (repo *OrderRepository) Delete(id interface{}) error {
-	_, err := repo.Get(id)
-	if err != nil {
-		return err
-	}
-	return repo.DB.Delete(models.Order{}, "order_id = ?", id).Error
+func (r *OrderRepository) List(orders *[]models.Order) {
+	r.DB.Model(&models.User{}).Find(orders)
 }

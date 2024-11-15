@@ -14,7 +14,7 @@ func NewOrderPrice(db *gorm.DB) *OrderService {
 	return &OrderService{Db: db}
 }
 
-func (s *OrderService) Create(request *requests.OrderRequest, order *models.Order) error {
+func (s *OrderService) Create(request *requests.CreateOrderRequest, order *models.Order) error {
 	order.OrderRef = request.OrderReference
 	order.OrderAmount = request.OrderAmount
 	order.ProductUID = request.ProductUID

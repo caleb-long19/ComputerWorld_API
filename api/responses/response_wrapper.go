@@ -23,7 +23,7 @@ func Response(c echo.Context, statusCode int, data interface{}) error {
 	return c.JSON(statusCode, data)
 }
 
-func ErrResponse(c echo.Context, statusCode int, message string) error {
+func ErrorResponse(c echo.Context, statusCode int, message string) error {
 	return Response(c, statusCode, Error{
 		Code:  statusCode,
 		Error: message,
@@ -35,17 +35,6 @@ func MessageResponse(c echo.Context, statusCode int, message string) error {
 		Code:    statusCode,
 		Message: message,
 	})
-}
-
-func ErrorResponseWithMeta(c echo.Context, statusCode int, message string, meta map[string]interface{}) error {
-	errorWithMeta := ErrorWithMeta{
-		Error: Error{
-			Code:  statusCode,
-			Error: message,
-		},
-		Meta: meta,
-	}
-	return Response(c, statusCode, errorWithMeta)
 }
 
 type ResponseMeta struct {

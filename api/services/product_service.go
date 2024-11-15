@@ -14,7 +14,7 @@ func NewProductService(db *gorm.DB) *ProductService {
 	return &ProductService{Db: db}
 }
 
-func (s *ProductService) Create(request *requests.ProductRequest, product *models.Product) error {
+func (s *ProductService) Create(request *requests.CreateProductRequest, product *models.Product) error {
 	product.ProductCode = request.ProductCode
 	product.ProductName = request.ProductName
 	product.ManufacturerUID = request.ManufacturerUID

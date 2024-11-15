@@ -19,7 +19,7 @@ func TestManufacturerCreate(t *testing.T) {
 	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoftest",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Db.Create(mf)
 
 	cases := []helpers.TestCase{
 		{
@@ -108,7 +108,7 @@ func TestManufacturerGet(t *testing.T) {
 	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Db.Create(mf)
 
 	cases := []helpers.TestCase{
 		{
@@ -164,7 +164,7 @@ func TestManufacturerUpdate(t *testing.T) {
 	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Db.Create(mf)
 
 	cases := []helpers.TestCase{
 		{
@@ -248,7 +248,7 @@ func TestManufacturerDelete(t *testing.T) {
 	mf := &models.Manufacturer{
 		ManufacturerName: "Microsoft",
 	}
-	ts.S.Database.Create(mf)
+	ts.S.Db.Create(mf)
 
 	cases := []helpers.TestCase{
 		{

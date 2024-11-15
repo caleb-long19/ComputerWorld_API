@@ -21,7 +21,7 @@ func TestUserCreate(t *testing.T) {
 		Name:     "John Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(user)
+	ts.S.Db.Create(user)
 
 	cases := []helpers.TestCase{
 		{
@@ -106,20 +106,20 @@ func TestUserGet(t *testing.T) {
 		Name:     "John Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(user)
+	ts.S.Db.Create(user)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can get user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,
 				BodyParts: []string{
 					user.Name,
-					fmt.Sprintf(`"user_id":%v`, user.UserID),
+					fmt.Sprintf(`"user_id":%v`, user.UID),
 				},
 			},
 		},
@@ -164,14 +164,14 @@ func TestUserUpdate(t *testing.T) {
 		Name:     "John Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(user)
+	ts.S.Db.Create(user)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can update user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			RequestBody: models.User{
 				Email:    "johntestnew@gmail.com",
@@ -187,7 +187,7 @@ func TestUserUpdate(t *testing.T) {
 			TestName: "Cannot update user as email format was incorrect",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			RequestBody: models.User{
 				Email:    "test.gmail.com",
@@ -202,7 +202,7 @@ func TestUserUpdate(t *testing.T) {
 			TestName: "Cannot update user as name has special characters",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			RequestBody: models.User{
 				Email:    "jacktestnew@gmail.com",
@@ -217,7 +217,7 @@ func TestUserUpdate(t *testing.T) {
 			TestName: "Cannot update user as password has invalid format",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			RequestBody: models.User{
 				Email:    "sarahtestnew@gmail.com",
@@ -257,14 +257,14 @@ func TestUserDelete(t *testing.T) {
 		Name:     "Delete Test",
 		Password: "TestPass15!",
 	}
-	ts.S.Database.Create(user)
+	ts.S.Db.Create(user)
 
 	cases := []helpers.TestCase{
 		{
 			TestName: "Can delete user by ID",
 			Request: helpers.Request{
 				Method: request.Method,
-				Url:    fmt.Sprintf("%v/%v", request.Url, user.UserID),
+				Url:    fmt.Sprintf("%v/%v", request.Url, user.UID),
 			},
 			Expected: helpers.ExpectedResponse{
 				StatusCode: http.StatusOK,

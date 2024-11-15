@@ -14,7 +14,7 @@ func NewManufacturerService(db *gorm.DB) *ManufacturerService {
 	return &ManufacturerService{Db: db}
 }
 
-func (s *ManufacturerService) Create(request *requests.ManufacturerRequest, manufacturer *models.Manufacturer) error {
+func (s *ManufacturerService) Create(request *requests.CreateManufacturerRequest, manufacturer *models.Manufacturer) error {
 	manufacturer.ManufacturerName = request.ManufacturerName
 
 	return s.Db.Create(&manufacturer).Error

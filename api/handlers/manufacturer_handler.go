@@ -6,122 +6,93 @@ import (
 	"ComputerWorld_API/api/responses"
 	"ComputerWorld_API/api/services"
 	"ComputerWorld_API/db/models"
-	"errors"
+	"ComputerWorld_API/db/repositories"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type ManufacturerHandler struct {
-	server  *s.Server
-	service *services.ManufacturerService
+	server           *s.Server
+	manufacturerRepo *repositories.ManufacturerRepository
+	service          *services.ManufacturerService
 }
 
 func NewManufacturerHandler(server *s.Server) *ManufacturerHandler {
 	mh := &ManufacturerHandler{server: server}
+	mh.manufacturerRepo = repositories.NewManufacturerRepository(server.Db)
 	mh.service = services.NewManufacturerService(server.Db)
 	return mh
 }
 
-func (mc *ManufacturerHandler) Create(c echo.Context) error {
-	requestManufacturer := new(requests.ManufacturerRequest)
-
-	if err := c.Bind(&requestManufacturer); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind manufacturer data"))
+func (h *ManufacturerHandler) Create(c echo.Context) error {
+	createManufacturerRequest := new(requests.CreateManufacturerRequest)
+	if err := c.Bind(&createManufacturerRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "could not bind manufacturer data")
+	}
+	if err := c.Validate(createManufacturerRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
-	// Validate the request manufacturer data
-	_, errV := ValidateManufacturerRequest(requestManufacturer)
-	if errV != nil {
-		// Return the validation error directly
-		return responses.ErrorResponse(c, 0, errV)
+	manufacturer := &models.Manufacturer{}
+	if err := h.service.Create(createManufacturerRequest, manufacturer); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("failed to store manufacturer in the database: %v", err))
 	}
 
-	// Call repository method to create the new manufacturer
-	err := mc.Create(validatedRequest)
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("failed to create manufacturer: %v", err))
-	}
-
-	return c.JSON(http.StatusCreated, validatedRequest)
+	response := responses.NewManufacturerResponse(manufacturer)
+	return responses.Response(c, http.StatusCreated, response)
 }
 
-func (mc *ManufacturerHandler) Get(c echo.Context) error {
-	manufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
+func (h *ManufacturerHandler) Update(c echo.Context) error {
+	updateManufacturerRequest := new(requests.UpdateManufacturerRequest)
+	if err := c.Bind(&updateManufacturerRequest); err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusOK, manufacturer)
+	manufacturerUID := c.Param("uid")
+
+	manufacturer := h.manufacturerRepo.Get(manufacturerUID)
+	if manufacturer.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "manufacturer does not exist")
+	}
+	if err := c.Validate(updateManufacturerRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+	}
+
+	manufacturer.ManufacturerName = updateManufacturerRequest.ManufacturerName
+
+	if err := h.service.Update(manufacturer); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong when updating the manufacturer in the database")
+	}
+
+	return responses.MessageResponse(c, http.StatusOK, "Manufacturer successfully updated")
 }
 
-func (mc *ManufacturerHandler) GetAll(c echo.Context) error {
-	manufacturers, err := mc.ManufacturerRepository.GetAll()
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, err)
+func (h *ManufacturerHandler) Get(c echo.Context) error {
+	uid := c.Param("uid")
+
+	manufacturer := &models.Manufacturer{}
+
+	h.manufacturerRepo.GetManufacturerByUID(manufacturer, uid)
+	if manufacturer.UID == "" {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "Manufacturer not found")
 	}
-	return c.JSON(http.StatusOK, manufacturers)
+
+	response := responses.NewManufacturerResponse(manufacturer)
+	return responses.Response(c, http.StatusOK, response)
 }
 
-func (mc *ManufacturerHandler) Update(c echo.Context) error {
-	existingManufacturer, err := mc.ManufacturerRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, fmt.Errorf("manufacturer not found: %v", err))
+func (h *ManufacturerHandler) Delete(c echo.Context) error {
+	uid := c.Param("uid")
+
+	manufacturer := h.manufacturerRepo.Get(uid)
+
+	if manufacturer.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "Manufacturer not found")
+	}
+	if err := h.service.Delete(manufacturer); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong deleting the manufacturer from the database.")
 	}
 
-	var updateManufacturer = new(requests.ManufacturerRequest)
-	if err := c.Bind(updateManufacturer); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind manufacturer data"))
-	}
-	if updateManufacturer == nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid manufacturer data"))
-	}
-
-	// Validate the request manufacturer data
-	validatedExistingManufacturer, errV := ValidateManufacturerRequest(updateManufacturer)
-	if errV != nil {
-		// Return the validation error directly
-		return responses.ErrorResponse(c, 0, errV)
-	}
-
-	existingManufacturer.ManufacturerName = validatedExistingManufacturer.ManufacturerName
-
-	if err := mc.ManufacturerRepository.Update(existingManufacturer); err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update manufacturer: %v", err))
-	}
-
-	return c.JSON(http.StatusCreated, existingManufacturer)
-}
-
-func (mc *ManufacturerHandler) Delete(c echo.Context) error {
-	err := mc.ManufacturerRepository.Delete(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
-	}
-
-	return c.JSON(http.StatusOK, "Manufacturer successfully deleted")
-}
-
-// ValidateManufacturerRequest validates the input request for creating or updating a manufacturer.
-func ValidateManufacturerRequest(request *requests.ManufacturerRequest) (*models.Manufacturer, error) {
-	if request == nil {
-		return nil, errors.New("invalid request body")
-	}
-
-	manufacturer := new(models.Manufacturer)
-	if request.ManufacturerName == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "manufacturer name is required")
-	}
-	if len(request.ManufacturerName) < 1 || len(request.ManufacturerName) > 25 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "manufacturer name must be between 1 and 25 characters")
-	}
-
-	manufacturer.ManufacturerName = request.ManufacturerName
-
-	err := requests.ValidateManufacturerInputs(manufacturer)
-	if err != nil {
-		return nil, err
-	}
-
-	return manufacturer, nil
+	return responses.MessageResponse(c, http.StatusOK, "Manufacturer successfully deleted")
 }

@@ -28,15 +28,15 @@ func NewUserHandler(server *s.Server) *UserHandler {
 func (h *UserHandler) Create(c echo.Context) error {
 	createUserRequest := new(requests.CreateUserRequest)
 	if err := c.Bind(&createUserRequest); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind user data"))
+		return responses.ErrorResponse(c, http.StatusBadRequest, "could not bind user data")
 	}
 	if err := c.Validate(createUserRequest); err != nil {
-		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
 	user := &models.User{}
 	if err := h.service.Create(createUserRequest, user); err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to store user in the database: %v", err))
+		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("failed to store user in the database: %v", err))
 	}
 
 	response := responses.NewUserResponse(user)
@@ -53,17 +53,17 @@ func (h *UserHandler) Update(c echo.Context) error {
 
 	user := h.userRepo.Get(userID)
 	if user.UID == "" {
-		return responses.ErrResponse(c, http.StatusBadRequest, "User not found")
+		return responses.ErrorResponse(c, http.StatusBadRequest, "User not found")
 	}
 	if err := c.Validate(updateUserRequest); err != nil {
-		return responses.ErrResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
 	user.Email = updateUserRequest.Email
 	user.Name = updateUserRequest.Name
 
 	if err := h.service.Update(user); err != nil {
-		return responses.ErrResponse(c, http.StatusInternalServerError, "failed to update user")
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "failed to update user")
 	}
 
 	return responses.MessageResponse(c, http.StatusOK, "User successfully updated")
@@ -76,7 +76,7 @@ func (h *UserHandler) Get(c echo.Context) error {
 
 	h.userRepo.GetUserByUID(user, uid)
 	if user.UID == "" {
-		return responses.ErrResponse(c, http.StatusNotFound, "User not found")
+		return responses.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
 
 	response := responses.NewUserResponse(user)
@@ -89,10 +89,10 @@ func (h *UserHandler) Delete(c echo.Context) error {
 	user := h.userRepo.Get(uid)
 
 	if user.UID == "" {
-		return responses.ErrResponse(c, http.StatusNotFound, "User not found")
+		return responses.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
 	if err := h.service.Delete(user); err != nil {
-		return responses.ErrResponse(c, http.StatusInternalServerError, "Something went wrong deleting the user from the database.")
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong deleting the user from the database.")
 	}
 
 	return responses.MessageResponse(c, http.StatusOK, "User successfully deleted")

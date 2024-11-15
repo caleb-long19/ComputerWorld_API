@@ -7,155 +7,97 @@ import (
 	"ComputerWorld_API/api/services"
 	"ComputerWorld_API/db"
 	"ComputerWorld_API/db/models"
-	"errors"
+	"ComputerWorld_API/db/repositories"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type OrderHandler struct {
-	server  *s.Server
-	service *services.OrderService
+	server    *s.Server
+	orderRepo *repositories.OrderRepository
+	service   *services.OrderService
 }
 
 func NewOrderHandler(server *s.Server) *OrderHandler {
 	oh := &OrderHandler{server: server}
+	oh.orderRepo = repositories.NewOrderRepository(server.Db)
 	oh.service = services.NewOrderPrice(server.Db)
 	return oh
 }
 
-func (oc *OrderController) Create(c echo.Context) error {
-	// Bind request body to the OrderRequest struct
-	requestOrder := new(requests.OrderRequest)
-
-	if err := c.Bind(&requestOrder); err != nil {
-		// Return bad request if binding fails
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind order data"))
+func (h *OrderHandler) Create(c echo.Context) error {
+	createOrderRequest := new(requests.CreateOrderRequest)
+	if err := c.Bind(&createOrderRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "could not bind order data")
+	}
+	if err := c.Validate(createOrderRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
 	}
 
-	// Validate the request manufacturer data
-	validatedRequest, errV := ValidateOrderRequest(requestOrder)
-	if errV != nil {
-		// Return the validation error directly, with its status code
-		return responses.ErrorResponse(c, 0, errV)
+	order := &models.Order{}
+	if err := h.service.Create(createOrderRequest, order); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("failed to store order in the database: %v", err))
 	}
 
-	// Call repository method to create the new product
-	err := oc.OrderRepository.Create(validatedRequest)
-	if err != nil {
-		// Return conflict if product creation fails
-		return responses.ErrorResponse(c, http.StatusConflict, fmt.Errorf("failed to create order: %v", err))
-	}
-
-	// Return success response with the created product
-	return c.JSON(http.StatusCreated, validatedRequest)
+	response := responses.NewOrderResponse(order)
+	return responses.Response(c, http.StatusCreated, response)
 }
 
-func (oc *OrderController) Get(c echo.Context) error {
-	order, err := oc.OrderRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
+func (h *OrderHandler) Update(c echo.Context) error {
+	updateOrderRequest := new(requests.UpdateOrderRequest)
+	if err := c.Bind(&updateOrderRequest); err != nil {
+		return err
 	}
 
-	return c.JSON(http.StatusOK, order)
+	orderUID := c.Param("uid")
+
+	order := h.orderRepo.Get(orderUID)
+	if order.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "order does not exist")
+	}
+	if err := c.Validate(updateOrderRequest); err != nil {
+		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Required fields are empty: %v", err))
+	}
+
+	order.OrderRef = updateOrderRequest.OrderReference
+	order.OrderAmount = updateOrderRequest.OrderAmount
+	order.ProductUID = updateOrderRequest.ProductUID
+
+	if err := h.service.Update(order); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong when updating the order in the database")
+	}
+
+	return responses.MessageResponse(c, http.StatusOK, "Order successfully updated")
 }
 
-func (oc *OrderController) GetAll(c echo.Context) error {
-	orders, err := oc.OrderRepository.GetAll()
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, err)
+func (h *OrderHandler) Get(c echo.Context) error {
+	uid := c.Param("uid")
+
+	order := &models.Order{}
+
+	h.orderRepo.GetOrderByUID(order, uid)
+	if order.UID == "" {
+		return responses.ErrorResponse(c, http.StatusBadRequest, "Order not found")
 	}
-	return c.JSON(http.StatusOK, orders)
+
+	response := responses.NewOrderResponse(order)
+	return responses.Response(c, http.StatusOK, response)
 }
 
-func (oc *OrderController) Update(c echo.Context) error {
-	// Get the existing order by ID
-	existingOrder, err := oc.OrderRepository.Get(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, fmt.Errorf("order not found: %v", err))
+func (h *OrderHandler) Delete(c echo.Context) error {
+	uid := c.Param("uid")
+
+	order := h.orderRepo.Get(uid)
+
+	if order.UID == "" {
+		return responses.ErrorResponse(c, http.StatusNotFound, "Order not found")
+	}
+	if err := h.service.Delete(order); err != nil {
+		return responses.ErrorResponse(c, http.StatusInternalServerError, "Something went wrong deleting the order from the database.")
 	}
 
-	// Bind the incoming request to the OrderRequest struct
-	var updateOrder = new(requests.OrderRequest)
-	if err := c.Bind(updateOrder); err != nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("could not bind order data"))
-	}
-
-	// Validate the incoming order data
-	if updateOrder == nil {
-		return responses.ErrorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid order data"))
-	}
-
-	// Validate the request manufacturer data
-	validatedExistingOrder, errV := ValidateOrderRequest(updateOrder)
-	if errV != nil {
-		// Return the validation error directly
-		return responses.ErrorResponse(c, 0, errV)
-	}
-
-	existingOrder.OrderRef = validatedExistingOrder.OrderRef
-	existingOrder.OrderAmount = validatedExistingOrder.OrderAmount
-	existingOrder.ProductUID = validatedExistingOrder.ProductUID
-
-	// Attempt to update the product in the repository
-	if err := oc.OrderRepository.Update(existingOrder); err != nil {
-		return responses.ErrorResponse(c, http.StatusInternalServerError, fmt.Errorf("failed to update order: %v", err))
-	}
-
-	// Successfully updated, return the updated order data
-	return c.JSON(http.StatusCreated, existingOrder)
-}
-
-func (oc *OrderController) Delete(c echo.Context) error {
-	err := oc.OrderRepository.Delete(c.Param("id"))
-	if err != nil {
-		return responses.ErrorResponse(c, http.StatusNotFound, err)
-	}
-
-	return c.JSON(http.StatusOK, "Order successfully deleted")
-}
-
-func ValidateOrderRequest(request *requests.OrderRequest) (*models.Order, error) {
-	if request == nil {
-		return nil, errors.New("invalid request body")
-	}
-
-	order := new(models.Order)
-	if request.OrderReference == "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid order reference")
-	}
-	if len(request.OrderReference) < 3 || len(request.OrderReference) > 12 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Order reference must be between 3 and 12 characters")
-	}
-	if request.OrderAmount <= 0 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid order amount")
-	}
-	if request.OrderAmount > 50 {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Order amount exceeds maximum limit")
-	}
-	if request.ProductUID <= "" {
-		return nil, responses.NewHTTPError(http.StatusBadRequest, "Invalid product uid")
-	}
-
-	order.OrderRef = request.OrderReference
-	order.OrderAmount = request.OrderAmount
-	order.ProductUID = request.ProductUID
-
-	err := requests.ValidateOrderInputs(order)
-	if err != nil {
-		return nil, err
-	}
-
-	errCOP := CalculateOrderPrice(order)
-	if errCOP != nil {
-		return order, errCOP
-	}
-	errCPS := CalculateProductStock(order)
-	if errCPS != nil {
-		return order, errCPS
-	}
-
-	return order, nil
+	return responses.MessageResponse(c, http.StatusOK, "Order successfully deleted")
 }
 
 // Calculations >>
@@ -177,9 +119,9 @@ func CalculateProductStock(order *models.Order) error {
 	}
 
 	// Check if there's enough stock to fulfill the order
-	if product.Stock < order.OrderAmount {
-		return responses.NewHTTPError(http.StatusBadRequest, "insufficient stock for the product")
-	}
+	//if product.Stock < order.OrderAmount {
+	//	return responses.NewHTTPError(http.StatusBadRequest, "insufficient stock for the product")
+	//}
 
 	product.Stock -= order.OrderAmount
 
